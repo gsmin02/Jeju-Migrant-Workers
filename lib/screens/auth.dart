@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme.dart';
+import '../state/app_state.dart';
+import '../state/i18n.dart';
 import '../services/supabase_service.dart';
 import '../widgets/common.dart';
 import '../widgets/citrus_mark.dart';
@@ -14,8 +17,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool signupMode = false;
   bool loading = false;
-  String? error;
-  String? notice;
+  String? error; // 원문 메시지(Supabase) 또는 i18n 키
+  String? notice; // i18n 키
 
   final _email = TextEditingController();
   final _pw = TextEditingController();
@@ -40,11 +43,11 @@ class _AuthScreenState extends State<AuthScreen> {
     final email = _email.text.trim();
     final pw = _pw.text;
     if (email.isEmpty || !email.contains('@')) {
-      setState(() => error = '올바른 이메일을 입력해 주세요.');
+      setState(() => error = 'au_err_email');
       return;
     }
     if (pw.length < 6) {
-      setState(() => error = '비밀번호는 6자 이상이어야 해요.');
+      setState(() => error = 'au_err_pw');
       return;
     }
     setState(() {
@@ -62,18 +65,21 @@ class _AuthScreenState extends State<AuthScreen> {
       setState(() => error = err);
       return;
     }
-    // 성공: 로그인 세션이 생기면 AuthGate(StreamBuilder)가 자동으로 메인으로 전환.
-    // 회원가입인데 세션이 아직 없으면(이메일 인증 필요 설정) 안내.
     if (signupMode && !supabase.isLoggedIn) {
       setState(() {
-        notice = '가입 완료! 이메일 인증이 필요한 설정이면 메일함을 확인한 뒤 로그인해 주세요.';
+        notice = 'au_notice';
         signupMode = false;
       });
     }
   }
 
+  /// 오류 문자열이 i18n 키면 번역, 아니면(Supabase 원문 메시지) 그대로.
+  String _msg(String lang, String s) => kI18n['ko']!.containsKey(s) ? tr(lang, s) : s;
+
   @override
   Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    final lang = app.lang;
     return Scaffold(
       backgroundColor: AppColors.paper,
       body: SafeArea(
@@ -94,31 +100,45 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(width: 10),
                 const Text('제이',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                const Spacer(),
+                // 언어 전환 (로그인 전에도 모국어로)
+                GestureDetector(
+                  onTap: () => context.read<AppState>().cycleLang(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.line, width: 1.5),
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Text('🌐 ${AppState.langLabels[lang]}',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.seaDeep)),
+                  ),
+                ),
               ]),
               const SizedBox(height: 22),
-              Text(signupMode ? '회원가입' : '로그인',
+              Text(tr(lang, signupMode ? 'au_signup' : 'au_login'),
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Text(
-                signupMode
-                    ? '이메일과 비밀번호로 계정을 만들어 주세요.\n근무 기록은 안전하게 내 계정에만 저장돼요.'
-                    : '가입한 이메일로 로그인하면 내 근무 기록을 볼 수 있어요.',
+                tr(lang, signupMode ? 'au_signup_sub' : 'au_login_sub'),
                 style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5),
               ),
               const SizedBox(height: 20),
-              _field('이메일', _email, hint: 'you@example.com', keyboard: TextInputType.emailAddress),
-              _field('비밀번호', _pw, hint: '6자 이상', obscure: true),
+              _field(tr(lang, 'au_email'), _email,
+                  hint: tr(lang, 'au_email_hint'), keyboard: TextInputType.emailAddress),
+              _field(tr(lang, 'au_pw'), _pw, hint: tr(lang, 'au_pw_hint'), obscure: true),
               if (signupMode) ...[
-                _field('이름 (닉네임도 괜찮아요)', _name, hint: '예: Bibek / 비벡'),
-                _natField(),
+                _field(tr(lang, 'au_name'), _name, hint: tr(lang, 'au_name_hint')),
+                _natField(lang),
               ],
               if (error != null) ...[
                 const SizedBox(height: 12),
-                _banner(error!, AppColors.redSoft, AppColors.red),
+                _banner(_msg(lang, error!), AppColors.redSoft, AppColors.red),
               ],
               if (notice != null) ...[
                 const SizedBox(height: 12),
-                _banner(notice!, AppColors.limeSoft, const Color(0xFF4A5D2A)),
+                _banner(_msg(lang, notice!), AppColors.limeSoft, const Color(0xFF4A5D2A)),
               ],
               const SizedBox(height: 22),
               loading
@@ -128,7 +148,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: CircularProgressIndicator(color: AppColors.sea),
                       ),
                     )
-                  : BigButton(signupMode ? '가입하고 시작하기' : '로그인', _submit),
+                  : BigButton(tr(lang, signupMode ? 'au_signup_btn' : 'au_login_btn'), _submit),
               const SizedBox(height: 10),
               Center(
                 child: TextButton(
@@ -140,8 +160,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             notice = null;
                           }),
                   child: Text(
-                    signupMode ? '이미 계정이 있어요 · 로그인' : '계정이 없어요 · 회원가입',
-                    style: const TextStyle(color: AppColors.seaDeep, fontSize: 13, fontWeight: FontWeight.w700),
+                    tr(lang, signupMode ? 'au_to_login' : 'au_to_signup'),
+                    style: const TextStyle(
+                        color: AppColors.seaDeep, fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -156,25 +177,27 @@ class _AuthScreenState extends State<AuthScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
-        child: Text(text, style: TextStyle(fontSize: 12, color: fg, height: 1.4, fontWeight: FontWeight.w600)),
+        child: Text(text,
+            style: TextStyle(fontSize: 12, color: fg, height: 1.4, fontWeight: FontWeight.w600)),
       );
 
   // 국적: 자유입력 대신 고정 목록에서 선택 (목록이 길면 스크롤).
-  Widget _natField() => Column(
+  Widget _natField(String lang) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 12, bottom: 4),
-            child: Text('국적 (선택)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Text(tr(lang, 'au_nat'),
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
           ),
           DropdownButtonFormField<String>(
             initialValue: _nationality,
             isExpanded: true,
             menuMaxHeight: 320,
             icon: const Icon(Icons.expand_more, color: AppColors.inkSoft),
-            hint: const Text('국적을 선택하세요',
-                style: TextStyle(color: Color(0xFFB0A98F), fontSize: 14)),
+            hint: Text(tr(lang, 'au_nat_hint'),
+                style: const TextStyle(color: Color(0xFFB0A98F), fontSize: 14)),
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -204,7 +227,8 @@ class _AuthScreenState extends State<AuthScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 4),
             child: Text(label,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
           ),
           TextField(
             controller: c,
