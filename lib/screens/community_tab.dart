@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
 import '../services/supabase_service.dart';
+import '../services/translate_service.dart';
 import '../widgets/common.dart';
 import '../widgets/paywall_sheet.dart';
 
@@ -26,6 +27,45 @@ class CommunityTab extends StatefulWidget {
 class _CommunityTabState extends State<CommunityTab> {
   bool hot = true;
   late Future<List<CommunityPost>> _future;
+
+  // ----- 번역 상태 -----
+  final Map<String, Map<String, String>> _tr = {}; // 'postId|lang' → {title,body,ai_answer}
+  final Set<String> _showTr = {}; // 번역을 보여주는 postId
+  final Set<String> _loadingTr = {}; // 번역 로딩 중인 postId
+
+  /// 글 번역 토글: 캐시(DB) → 없으면 AI 번역 후 DB 캐시 저장.
+  Future<void> _toggleTranslate(CommunityPost p, String lang) async {
+    final key = '${p.id}|$lang';
+    if (_showTr.contains(p.id)) {
+      setState(() => _showTr.remove(p.id));
+      return;
+    }
+    if (_tr.containsKey(key)) {
+      setState(() => _showTr.add(p.id));
+      return;
+    }
+    setState(() => _loadingTr.add(p.id));
+    // 1) DB 캐시 먼저
+    Map<String, String>? t = await supabase.fetchTranslation(p.id, lang);
+    // 2) 없으면 AI 번역 후 캐시에 저장
+    if (t == null) {
+      final out = await translateService.translate([p.title, p.body, p.aiAnswer ?? ''], lang);
+      if (out != null && out.length == 3) {
+        t = {'title': out[0], 'body': out[1], 'ai_answer': out[2]};
+        await supabase.saveTranslation(p.id, lang,
+            title: out[0], body: out[1], aiAnswer: out[2]);
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _loadingTr.remove(p.id);
+      if (t != null) {
+        _tr[key] = t;
+        _showTr.add(p.id);
+      }
+    });
+    if (t == null && mounted) toast(context, tr(lang, 'tr_fail'));
+  }
 
   @override
   void initState() {
@@ -151,6 +191,14 @@ class _CommunityTabState extends State<CommunityTab> {
 
   Widget _postCard(BuildContext context, CommunityPost p) {
     final lang = context.read<AppState>().lang;
+    final showing = _showTr.contains(p.id);
+    final loading = _loadingTr.contains(p.id);
+    final t = showing ? _tr['${p.id}|$lang'] : null;
+    final title = t != null ? t['title']! : p.title;
+    final body = t != null ? t['body']! : p.body;
+    final ai = t != null ? t['ai_answer']! : (p.aiAnswer ?? '');
+    // 원문이 한국어라고 보고, 다른 언어일 때만 번역 버튼 노출.
+    final canTranslate = lang != 'ko';
     return GestureDetector(
       onTap: () => _gate(context, () => _openPost(context, p)),
       child: Container(
@@ -170,12 +218,12 @@ class _CommunityTabState extends State<CommunityTab> {
             Text('👍 ${p.likes}', style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
           ]),
           const SizedBox(height: 7),
-          Text(p.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-          if (p.body.isNotEmpty) ...[
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+          if (body.isNotEmpty) ...[
             const SizedBox(height: 5),
-            Text(p.body, style: const TextStyle(fontSize: 12.5, color: Color(0xFF3A4A55), height: 1.4)),
+            Text(body, style: const TextStyle(fontSize: 12.5, color: Color(0xFF3A4A55), height: 1.4)),
           ],
-          if (p.aiAnswer != null && p.aiAnswer!.isNotEmpty) ...[
+          if (ai.isNotEmpty) ...[
             const SizedBox(height: 9),
             Container(
               padding: const EdgeInsets.all(10),
@@ -184,9 +232,32 @@ class _CommunityTabState extends State<CommunityTab> {
                 Text(tr(lang, 'ai_who'),
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
                 const SizedBox(height: 3),
-                Text(p.aiAnswer!, style: const TextStyle(fontSize: 12, height: 1.4)),
+                Text(ai, style: const TextStyle(fontSize: 12, height: 1.4)),
               ]),
             ),
+          ],
+          if (canTranslate) ...[
+            const SizedBox(height: 9),
+            Row(children: [
+              // 내부 탭이 카드 탭(상세 열기)으로 전파되지 않도록 별도 GestureDetector.
+              GestureDetector(
+                onTap: loading ? null : () => _toggleTranslate(p, lang),
+                child: Text(
+                  loading
+                      ? '🌐 ${tr(lang, 'tr_loading')}'
+                      : showing
+                          ? '🔙 ${tr(lang, 'tr_orig')}'
+                          : '🌐 ${tr(lang, 'tr_show')}',
+                  style: const TextStyle(
+                      fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.seaDeep),
+                ),
+              ),
+              if (showing) ...[
+                const SizedBox(width: 8),
+                Text('· ${tr(lang, 'tr_by_ai')}',
+                    style: const TextStyle(fontSize: 10, color: AppColors.inkSoft)),
+              ],
+            ]),
           ],
         ]),
       ),

@@ -102,6 +102,26 @@ drop policy if exists "comments insert own" on public.community_comments;
 create policy "comments read" on public.community_comments for select to authenticated using (true);
 create policy "comments insert own" on public.community_comments for insert to authenticated with check (auth.uid() = author);
 
+-- ---------- 4-1. post_translations (커뮤니티 글 번역 캐시) ----------
+-- AI로 한 번 번역한 글(제목/본문/AI답변)을 언어별로 저장해 재호출을 막는다.
+-- 캐시는 모든 로그인 사용자가 공유(읽기·쓰기).
+create table if not exists public.post_translations (
+  post_id    uuid not null references public.community_posts(id) on delete cascade,
+  lang       text not null,
+  title      text,
+  body       text,
+  ai_answer  text,
+  created_at timestamptz not null default now(),
+  primary key (post_id, lang)
+);
+alter table public.post_translations enable row level security;
+drop policy if exists "post_tr read" on public.post_translations;
+drop policy if exists "post_tr insert" on public.post_translations;
+drop policy if exists "post_tr update" on public.post_translations;
+create policy "post_tr read" on public.post_translations for select to authenticated using (true);
+create policy "post_tr insert" on public.post_translations for insert to authenticated with check (true);
+create policy "post_tr update" on public.post_translations for update to authenticated using (true) with check (true);
+
 -- ---------- 5. work_logs (이미 존재) — 정책 보강만 ----------
 -- 테이블/컬럼은 기존 것을 사용. 혹시 정책이 없다면 아래로 보강.
 alter table if exists public.work_logs enable row level security;
