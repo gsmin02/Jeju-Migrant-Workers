@@ -85,7 +85,7 @@ class SupabaseService {
     } on AuthException catch (e) {
       return e.message;
     } catch (e) {
-      return '가입 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
+      return 'err_signup'; // auth.dart에서 현재 언어로 번역
     }
   }
 
@@ -97,7 +97,7 @@ class SupabaseService {
     } on AuthException catch (e) {
       return e.message;
     } catch (e) {
-      return '로그인 중 오류가 발생했어요.';
+      return 'err_signin'; // auth.dart에서 현재 언어로 번역
     }
   }
 
