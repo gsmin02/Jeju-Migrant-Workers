@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
+import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import '../data/avatar_svgs.dart';
 
@@ -51,9 +53,64 @@ class AppState extends ChangeNotifier {
   bool paid = false; // 이용권 구매 여부
   bool previewPaid = false; // 유료 전환 미리보기
   bool punchedIn = false;
+  bool punchedOutDone = false; // 오늘 퇴근까지 완료(GPS 링 'out' 상태)
   String? jobAd;
   String? _openLogId;
   String? _loadedUid; // 프로필/기록을 로드한 사용자 (중복 로드 방지)
+
+  // ----- 출퇴근 알림 설정 -----
+  bool notiAuto = true;
+  bool notiIn = true;
+  bool notiOut = true;
+  TimeOfDay notiInTime = const TimeOfDay(hour: 6, minute: 30);
+  TimeOfDay notiOutTime = const TimeOfDay(hour: 18, minute: 0);
+
+  void toggleNoti(String which) {
+    switch (which) {
+      case 'auto':
+        notiAuto = !notiAuto;
+      case 'in':
+        notiIn = !notiIn;
+      case 'out':
+        notiOut = !notiOut;
+    }
+    notifyListeners();
+  }
+
+  void setNotiTime(String which, TimeOfDay time) {
+    if (which == 'in') {
+      notiInTime = time;
+    } else {
+      notiOutTime = time;
+    }
+    notifyListeners();
+  }
+
+  // ----- 시스템 알림 배너 (상단 오버레이) -----
+  String? sysNotiTitle;
+  String? sysNotiText;
+  int _sysNotiSeq = 0;
+
+  void showSysNoti(String title, String text) {
+    sysNotiTitle = title;
+    sysNotiText = text;
+    final seq = ++_sysNotiSeq;
+    notifyListeners();
+    Timer(const Duration(milliseconds: 4500), () {
+      if (seq == _sysNotiSeq) {
+        sysNotiTitle = null;
+        sysNotiText = null;
+        notifyListeners();
+      }
+    });
+  }
+
+  void dismissSysNoti() {
+    _sysNotiSeq++;
+    sysNotiTitle = null;
+    sysNotiText = null;
+    notifyListeners();
+  }
 
   static const langOrder = ['ko', 'en', 'vi', 'id'];
   static const langLabels = {
@@ -178,6 +235,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> punch(bool punchIn, String time) async {
     punchedIn = punchIn;
+    punchedOutDone = !punchIn; // 퇴근하면 GPS 링을 'out' 상태로
     if (punchIn) {
       _openLogId = await supabase.startLog(time);
     } else {

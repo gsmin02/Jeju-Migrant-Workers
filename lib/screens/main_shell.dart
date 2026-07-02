@@ -38,7 +38,22 @@ class _MainShellState extends State<MainShell> {
     final barKey = 'bar_${_views[idx]}';
     return Scaffold(
       backgroundColor: AppColors.paper,
-      body: Column(
+      body: Stack(
+        children: [
+          _body(context, app, barKey),
+          if (app.sysNotiTitle != null)
+            Positioned(
+              top: 0, left: 8, right: 8,
+              child: SafeArea(child: _SysNotiBanner(app: app)),
+            ),
+        ],
+      ),
+      bottomNavigationBar: _TabBar(idx: idx, onTap: goTab, lang: app.lang),
+    );
+  }
+
+  Widget _body(BuildContext context, AppState app, String barKey) {
+    return Column(
         children: [
           // 상단바
           Container(
@@ -100,8 +115,50 @@ class _MainShellState extends State<MainShell> {
             ),
           ),
         ],
+      );
+  }
+}
+
+/// 시스템 알림 배너 (기록 탭 '알림 미리보기' 등에서 표시). 탭하면 닫힘.
+class _SysNotiBanner extends StatelessWidget {
+  final AppState app;
+  const _SysNotiBanner({required this.app});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => app.dismissSysNoti(),
+      child: Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.line),
+          boxShadow: const [
+            BoxShadow(color: Color(0x1F000000), offset: Offset(0, 4), blurRadius: 16),
+          ],
+        ),
+        child: Row(children: [
+          Container(
+            width: 34, height: 34, padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+                color: AppColors.yellow, borderRadius: BorderRadius.circular(9)),
+            child: const CitrusMark(size: 28),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(app.sysNotiTitle ?? '',
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text(app.sysNotiText ?? '',
+                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11.5, color: AppColors.inkSoft, height: 1.35)),
+            ]),
+          ),
+        ]),
       ),
-      bottomNavigationBar: _TabBar(idx: idx, onTap: goTab, lang: app.lang),
     );
   }
 }
