@@ -179,7 +179,7 @@ class _RecordTabState extends State<RecordTab> {
         Text(tr(app.lang, 'evi_head'),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
-        _evi(AppColors.sea, tr(app.lang, 'evi_gps'), null, '91${tr(app.lang, 'unit_case')}'),
+        _evi(AppColors.sea, tr(app.lang, 'evi_gps'), null, '${app.logs.length}${tr(app.lang, 'unit_case')}'),
         _evi(AppColors.limeDeep, tr(app.lang, 'evi_jobad'),
             app.jobAd != null
                 ? tr(app.lang, 'evi_jobad_saved').replaceAll('{name}', app.jobAd!)

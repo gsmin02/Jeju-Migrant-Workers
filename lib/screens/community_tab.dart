@@ -33,6 +33,38 @@ class _CommunityTabState extends State<CommunityTab> {
   final Set<String> _showTr = {}; // 번역을 보여주는 postId
   final Set<String> _loadingTr = {}; // 번역 로딩 중인 postId
 
+  // ----- 좋아요 상태 -----
+  final Set<String> _liked = {}; // 내가 좋아요한 postId
+  final Map<String, int> _likes = {}; // postId → 표시용 좋아요 수(오버라이드)
+
+  /// 귤(좋아요) 토글: DB(toggle_like RPC) 반영, 실패 시 로컬 낙관적 토글.
+  Future<void> _toggleLike(CommunityPost p) async {
+    final res = await supabase.toggleLike(p.id);
+    if (!mounted) return;
+    if (res != null && res['ok'] == true) {
+      setState(() {
+        if (res['liked'] == true) {
+          _liked.add(p.id);
+        } else {
+          _liked.remove(p.id);
+        }
+        _likes[p.id] = (res['likes'] ?? p.likes) as int;
+      });
+    } else {
+      // DB 미연결/마이그레이션 전 — 로컬 낙관적 토글(하트 표시)
+      setState(() {
+        final base = _likes[p.id] ?? p.likes;
+        if (_liked.contains(p.id)) {
+          _liked.remove(p.id);
+          _likes[p.id] = base - 1;
+        } else {
+          _liked.add(p.id);
+          _likes[p.id] = base + 1;
+        }
+      });
+    }
+  }
+
   /// 글 번역 토글: 캐시(DB) → 없으면 AI 번역 후 DB 캐시 저장.
   Future<void> _toggleTranslate(CommunityPost p, String lang) async {
     final key = '${p.id}|$lang';
@@ -215,7 +247,20 @@ class _CommunityTabState extends State<CommunityTab> {
           Row(children: [
             Pill(_catLabel(lang, p.category), bg: AppColors.seaSoft, fg: AppColors.seaDeep),
             const Spacer(),
-            Text('👍 ${p.likes}', style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
+            // 귤 좋아요 — 누르면 옆에 하트가 붙음
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _toggleLike(p),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('🍊 ${_likes[p.id] ?? p.likes}',
+                    style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                if (_liked.contains(p.id))
+                  const Padding(
+                    padding: EdgeInsets.only(left: 3),
+                    child: Text('💕', style: TextStyle(fontSize: 12)),
+                  ),
+              ]),
+            ),
           ]),
           const SizedBox(height: 7),
           Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),

@@ -61,22 +61,46 @@ class _WorkplaceTabState extends State<WorkplaceTab> {
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
           children: [
             ViewHeader(tr(lang, 'work_title'), tr(lang, 'work_sub')),
-            TextField(
-              onChanged: (v) => setState(() => query = v),
-              decoration: InputDecoration(
-                hintText: tr(lang, 'work_search'),
-                isDense: true,
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-                border: OutlineInputBorder(
+            // 검색은 이용권(paid) 사용자만. 미결제 시 눌러서 페이월.
+            if (app.paid)
+              TextField(
+                onChanged: (v) => setState(() => query = v),
+                decoration: InputDecoration(
+                  hintText: tr(lang, 'work_search'),
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: AppColors.line)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: AppColors.line)),
+                ),
+              )
+            else
+              GestureDetector(
+                onTap: () => showPaywall(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF6F1E6),
                     borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(color: AppColors.line)),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(color: AppColors.line)),
+                    border: Border.all(color: AppColors.line),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.lock_outline, size: 16, color: AppColors.inkSoft),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(tr(lang, 'wp_search_lock'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                    ),
+                  ]),
+                ),
               ),
-            ),
             const SizedBox(height: 4),
             if (app.workplace != null && app.workplace!.isNotEmpty && q.isEmpty) ...[
               SectionLabel(tr(lang, 'work_my')),

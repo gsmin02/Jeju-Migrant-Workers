@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
 import '../services/complaint_service.dart';
+import '../services/translate_service.dart';
 import 'common.dart';
 
 void showComplaintSheet(BuildContext context) {
@@ -32,6 +33,22 @@ class _ComplaintSheetState extends State<_ComplaintSheet> {
   bool _loading = false;
   bool _showKo = true;
   ComplaintResult? _result;
+  String? _fullTr; // 진정서 전문 번역(현재 언어)
+  bool _translating = false;
+
+  /// 진정서 전문을 현재 언어로 번역(1회). 실패 시 모국어 요약으로 폴백.
+  Future<void> _translateFull() async {
+    if (_result == null || _fullTr != null || _translating) return;
+    final app = context.read<AppState>();
+    final target = app.lang == 'ko' ? 'en' : app.lang;
+    setState(() => _translating = true);
+    final out = await translateService.translate([_result!.complaintKo], target);
+    if (!mounted) return;
+    setState(() {
+      _fullTr = (out != null && out.isNotEmpty) ? out[0] : _result!.summaryNative;
+      _translating = false;
+    });
+  }
 
   @override
   void initState() {
@@ -143,14 +160,19 @@ class _ComplaintSheetState extends State<_ComplaintSheet> {
               Container(
                 padding: const EdgeInsets.all(11),
                 decoration: BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.circular(11)),
-                child: Text(tr(lang, 'cp_attach'),
+                child: Text(
+                    tr(lang, 'cp_attach')
+                        .replaceAll('{n}', '${context.read<AppState>().logs.length}'),
                     style: const TextStyle(fontSize: 11.5, color: Color(0xFF5A4A2A), height: 1.5)),
               ),
             ] else ...[
               Row(children: [
                 _tab(tr(lang, 'cp_tab_ko'), _showKo, () => setState(() => _showKo = true)),
                 const SizedBox(width: 8),
-                _tab(tr(lang, 'cp_tab_native'), !_showKo, () => setState(() => _showKo = false)),
+                _tab(tr(lang, 'cp_tab_native'), !_showKo, () {
+                  setState(() => _showKo = false);
+                  _translateFull(); // 내 언어 탭 → 진정서 전문 번역
+                }),
               ]),
               const SizedBox(height: 10),
               Container(
@@ -161,8 +183,24 @@ class _ComplaintSheetState extends State<_ComplaintSheet> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.line),
                 ),
-                child: Text(_showKo ? _result!.complaintKo : _result!.summaryNative,
-                    style: TextStyle(fontSize: _showKo ? 12.5 : 13, height: 1.55)),
+                child: _showKo
+                    ? Text(_result!.complaintKo,
+                        style: const TextStyle(fontSize: 12.5, height: 1.55))
+                    : _translating
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.sea)),
+                              const SizedBox(width: 10),
+                              Text(tr(lang, 'cp_loading'),
+                                  style: const TextStyle(color: AppColors.inkSoft)),
+                            ]),
+                          )
+                        : Text(_fullTr ?? _result!.summaryNative,
+                            style: const TextStyle(fontSize: 13, height: 1.55)),
               ),
               const SizedBox(height: 12),
               BigButton(tr(lang, 'cp_pdf'), _pdf),

@@ -60,7 +60,8 @@ class _SosTabState extends State<SosTab> {
                     child: Text(tr(lang, 'sos_q${i + 1}'),
                         style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
                   ),
-                  Text(open ? '▲' : '▾', style: const TextStyle(color: AppColors.inkSoft)),
+                  Text(open ? '▲' : '▼',
+                      style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
                 ]),
                 if (open) ...[
                   const Padding(

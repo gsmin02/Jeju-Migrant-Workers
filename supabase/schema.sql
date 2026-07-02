@@ -155,6 +155,38 @@ create policy "post_tr read" on public.post_translations for select to authentic
 create policy "post_tr insert" on public.post_translations for insert to authenticated with check (true);
 create policy "post_tr update" on public.post_translations for update to authenticated using (true) with check (true);
 
+-- ---------- 4-2. post_likes (커뮤니티 좋아요) ----------
+create table if not exists public.post_likes (
+  post_id    uuid not null references public.community_posts(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+alter table public.post_likes enable row level security;
+drop policy if exists "likes self all" on public.post_likes;
+create policy "likes self all" on public.post_likes for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- 좋아요 토글: 내 좋아요를 켜고/끄고 community_posts.likes를 갱신. RLS 우회 위해 security definer.
+create or replace function public.toggle_like(p_post uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); is_liked boolean; cnt int;
+begin
+  if me is null then return jsonb_build_object('ok', false); end if;
+  if exists (select 1 from public.post_likes where post_id = p_post and user_id = me) then
+    delete from public.post_likes where post_id = p_post and user_id = me;
+    update public.community_posts set likes = greatest(0, likes - 1) where id = p_post;
+    is_liked := false;
+  else
+    insert into public.post_likes (post_id, user_id) values (p_post, me);
+    update public.community_posts set likes = likes + 1 where id = p_post;
+    is_liked := true;
+  end if;
+  select likes into cnt from public.community_posts where id = p_post;
+  return jsonb_build_object('ok', true, 'liked', is_liked, 'likes', cnt);
+end; $$;
+grant execute on function public.toggle_like(uuid) to authenticated;
+
 -- ---------- 5. work_logs (이미 존재) — 정책 보강만 ----------
 -- 테이블/컬럼은 기존 것을 사용. 혹시 정책이 없다면 아래로 보강.
 alter table if exists public.work_logs enable row level security;

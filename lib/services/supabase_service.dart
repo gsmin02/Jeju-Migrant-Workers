@@ -207,6 +207,18 @@ class SupabaseService {
     }
   }
 
+  /// 좋아요 토글. toggle_like RPC → {ok, liked, likes}. 실패 시 null.
+  Future<Map<String, dynamic>?> toggleLike(String postId) async {
+    if (!isLoggedIn) return null;
+    try {
+      final res = await _c.rpc('toggle_like', params: {'p_post': postId});
+      if (res is Map) return Map<String, dynamic>.from(res);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<String?> addPost(String category, String title, String body) async {
     final id = uid;
     if (id == null) return '로그인이 필요해요';
