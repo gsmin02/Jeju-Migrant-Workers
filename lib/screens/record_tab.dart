@@ -45,11 +45,11 @@ class _RecordTabState extends State<RecordTab> {
         ViewHeader(tr(app.lang, 'record_title'), tr(app.lang, 'record_sub')),
         // 주간 요약
         Row(children: [
-          _summary('5일', '이번 주 근무'),
+          _summary('5${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_week')),
           const SizedBox(width: 8),
-          _summary('47.2h', '이번 주 시간'),
+          _summary('47.2h', tr(app.lang, 'ws_hours')),
           const SizedBox(width: 8),
-          _summary('4일', '연속 기록 🔥'),
+          _summary('4${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_streak')),
         ]),
         const SizedBox(height: 14),
         // GPS 카드
@@ -78,10 +78,10 @@ class _RecordTabState extends State<RecordTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(app.punchedIn ? '📍 근무 중' : '📍 근무지 도착',
+                      Text(app.punchedIn ? tr(app.lang, 'gps_working') : tr(app.lang, 'gps_arrived'),
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
                       const SizedBox(height: 3),
-                      Text(app.punchedIn ? '한라양식 · 출근 기록됨' : '한라양식 · 반경 40m 이내',
+                      Text(app.punchedIn ? tr(app.lang, 'gps_in_done') : tr(app.lang, 'gps_near'),
                           style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
                     ],
                   ),
@@ -91,23 +91,23 @@ class _RecordTabState extends State<RecordTab> {
             const SizedBox(height: 16),
             Text(_clock,
                 style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -.5)),
-            const Text('2026년 7월 2일 수요일',
-                style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            Text(tr(app.lang, 'rec_date'),
+                style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
             const SizedBox(height: 14),
             Row(children: [
               Expanded(
-                child: _punchBtn('🌅 출근하기', const [Color(0xFFF9B84E), Color(0xFFF5A623)],
+                child: _punchBtn(tr(app.lang, 'punch_in'), const [Color(0xFFF9B84E), Color(0xFFF5A623)],
                     enabled: !app.punchedIn, onTap: () {
                   app.punch(true, _clock);
-                  toast(context, '🌅 출근 기록됨 · GPS 인증 (한라양식, $_clock)');
+                  toast(context, tr(app.lang, 'toast_punch_in').replaceAll('{t}', _clock));
                 }),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _punchBtn('🌙 퇴근하기', const [Color(0xFF4E9A5A), Color(0xFF3F7D4F)],
+                child: _punchBtn(tr(app.lang, 'punch_out'), const [Color(0xFF4E9A5A), Color(0xFF3F7D4F)],
                     enabled: app.punchedIn, onTap: () {
                   app.punch(false, _clock);
-                  toast(context, '🌙 퇴근 기록됨 · 오늘 근무시간 저장 완료');
+                  toast(context, tr(app.lang, 'toast_punch_out'));
                 }),
               ),
             ]),
@@ -116,18 +116,20 @@ class _RecordTabState extends State<RecordTab> {
         // 증거함
         AppCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('🗂 증거함  — 진정서에 자동 첨부돼요',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+            Text(tr(app.lang, 'evi_head'),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
-            _evi(AppColors.sea, 'GPS 출퇴근 기록', null, '91건'),
-            _evi(AppColors.limeDeep, '채용공고',
-                app.jobAd != null ? '저장됨 ✓ (${app.jobAd})' : '미등록 — 사업지 등록에서 추가',
+            _evi(AppColors.sea, tr(app.lang, 'evi_gps'), null, '91${tr(app.lang, 'unit_case')}'),
+            _evi(AppColors.limeDeep, tr(app.lang, 'evi_jobad'),
+                app.jobAd != null
+                    ? tr(app.lang, 'evi_jobad_saved').replaceAll('{name}', app.jobAd!)
+                    : tr(app.lang, 'evi_jobad_none'),
                 app.jobAd != null ? '✓' : '—'),
-            _evi(AppColors.amber, '동료 교차기록', '같은 사업장 6명 사용 중 — 기록이 서로를 검증해요', '✓'),
+            _evi(AppColors.amber, tr(app.lang, 'evi_coworker'), tr(app.lang, 'evi_coworker_d'), '✓'),
           ]),
         ),
         // 최근 기록
-        const SectionLabel('최근 기록'),
+        SectionLabel(tr(app.lang, 'rec_recent')),
         AppCard(
           child: Column(
             children: app.logs

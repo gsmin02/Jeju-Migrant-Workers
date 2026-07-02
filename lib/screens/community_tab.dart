@@ -7,6 +7,16 @@ import '../services/supabase_service.dart';
 import '../widgets/common.dart';
 import '../widgets/paywall_sheet.dart';
 
+/// DB에 저장된 한국어 카테고리 값을 현재 언어 라벨로 변환.
+String _catLabel(String lang, String cat) {
+  const m = {
+    '임금체불': 'cat_wage', '계약': 'cat_contract', '비자': 'cat_visa',
+    '제주생활': 'cat_life', '기타': 'cat_etc',
+  };
+  final k = m[cat];
+  return k != null ? tr(lang, k) : (cat.isEmpty ? tr(lang, 'cat_etc') : cat);
+}
+
 class CommunityTab extends StatefulWidget {
   const CommunityTab({super.key});
   @override
@@ -48,7 +58,7 @@ class _CommunityTabState extends State<CommunityTab> {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
       children: [
         ViewHeader(tr(app.lang, 'comm_title'), tr(app.lang, 'comm_sub')),
-        if (!app.previewPaid) _freeBadge('🎉 오픈 기간 — 글쓰기·읽기 모두 무료예요'),
+        if (!app.previewPaid) _freeBadge(tr(app.lang, 'comm_free_badge')),
         GestureDetector(
           onTap: () => _gate(context, () => _openWrite(context)),
           child: Container(
@@ -63,18 +73,18 @@ class _CommunityTabState extends State<CommunityTab> {
                       shape: BoxShape.circle),
                   alignment: Alignment.center, child: const Text('✨', style: TextStyle(fontSize: 16))),
               const SizedBox(width: 10),
-              const Expanded(
-                child: Text('궁금한 점을 물어보세요 · 글 작성 시 +50P',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.inkSoft)),
+              Expanded(
+                child: Text(tr(app.lang, 'comm_ask'),
+                    style: const TextStyle(fontSize: 12.5, color: AppColors.inkSoft)),
               ),
             ]),
           ),
         ),
         const SizedBox(height: 12),
         Row(children: [
-          _sortTab('🔥 인기순', hot, () => _setSort(true)),
+          _sortTab(tr(app.lang, 'sort_hot'), hot, () => _setSort(true)),
           const SizedBox(width: 8),
-          _sortTab('🕐 최신순', !hot, () => _setSort(false)),
+          _sortTab(tr(app.lang, 'sort_new'), !hot, () => _setSort(false)),
         ]),
         const SizedBox(height: 12),
         FutureBuilder<List<CommunityPost>>(
@@ -88,11 +98,11 @@ class _CommunityTabState extends State<CommunityTab> {
             }
             final posts = snap.data ?? const <CommunityPost>[];
             if (posts.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Center(
-                  child: Text('아직 글이 없어요 · 첫 글을 남겨보세요',
-                      style: TextStyle(color: AppColors.inkSoft, fontSize: 13)),
+                  child: Text(tr(app.lang, 'comm_empty'),
+                      style: const TextStyle(color: AppColors.inkSoft, fontSize: 13)),
                 ),
               );
             }
@@ -100,12 +110,12 @@ class _CommunityTabState extends State<CommunityTab> {
             final rest = posts.where((p) => !p.pinned).toList();
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (pinned.isNotEmpty) ...[
-                const Text('📌 오늘의 핫한 주제',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
+                Text(tr(app.lang, 'pin_label'),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
                 const SizedBox(height: 8),
                 ...pinned.map((p) => _postCard(context, p)),
               ],
-              SectionLabel(hot ? '인기 글' : '최신 글'),
+              SectionLabel(tr(app.lang, hot ? 'comm_hot_label' : 'comm_new_label')),
               ...rest.map((p) => _postCard(context, p)),
             ]);
           },
@@ -140,6 +150,7 @@ class _CommunityTabState extends State<CommunityTab> {
       );
 
   Widget _postCard(BuildContext context, CommunityPost p) {
+    final lang = context.read<AppState>().lang;
     return GestureDetector(
       onTap: () => _gate(context, () => _openPost(context, p)),
       child: Container(
@@ -154,7 +165,7 @@ class _CommunityTabState extends State<CommunityTab> {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Pill(p.category.isEmpty ? '기타' : p.category, bg: AppColors.seaSoft, fg: AppColors.seaDeep),
+            Pill(_catLabel(lang, p.category), bg: AppColors.seaSoft, fg: AppColors.seaDeep),
             const Spacer(),
             Text('👍 ${p.likes}', style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
           ]),
@@ -170,8 +181,8 @@ class _CommunityTabState extends State<CommunityTab> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(color: AppColors.seaSoft, borderRadius: BorderRadius.circular(10)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('✨ AI 도우미 + 선배 노동자',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
+                Text(tr(lang, 'ai_who'),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
                 const SizedBox(height: 3),
                 Text(p.aiAnswer!, style: const TextStyle(fontSize: 12, height: 1.4)),
               ]),
@@ -183,6 +194,7 @@ class _CommunityTabState extends State<CommunityTab> {
   }
 
   void _openWrite(BuildContext context) {
+    final lang = context.read<AppState>().lang;
     final titleC = TextEditingController();
     final bodyC = TextEditingController();
     String category = '임금체불';
@@ -199,28 +211,28 @@ class _CommunityTabState extends State<CommunityTab> {
             Center(child: Container(width: 42, height: 5,
                 decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
             const SizedBox(height: 14),
-            const Text('✍️ 글 쓰기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(tr(lang, 'write_title'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
             Wrap(spacing: 6, children: [
               for (final c in cats)
                 GestureDetector(
                   onTap: () => setSheet(() => category = c),
-                  child: Pill(c,
+                  child: Pill(_catLabel(lang, c),
                       bg: category == c ? AppColors.sea : AppColors.seaSoft,
                       fg: category == c ? Colors.white : AppColors.seaDeep),
                 ),
             ]),
             const SizedBox(height: 10),
             TextField(controller: titleC,
-                decoration: const InputDecoration(hintText: '제목을 입력하세요', border: OutlineInputBorder())),
+                decoration: InputDecoration(hintText: tr(lang, 'write_title_ph'), border: const OutlineInputBorder())),
             const SizedBox(height: 8),
             TextField(controller: bodyC, maxLines: 4,
-                decoration: const InputDecoration(hintText: '내용을 자유롭게 적어주세요', border: OutlineInputBorder())),
+                decoration: InputDecoration(hintText: tr(lang, 'write_body_ph'), border: const OutlineInputBorder())),
             const SizedBox(height: 14),
-            BigButton('올리기 (+50P)', () async {
+            BigButton(tr(lang, 'write_submit'), () async {
               final title = titleC.text.trim();
               if (title.isEmpty) {
-                toast(context, '제목을 입력해 주세요');
+                toast(context, tr(lang, 'write_need_title'));
                 return;
               }
               final err = await supabase.addPost(category, title, bodyC.text.trim());
@@ -229,7 +241,7 @@ class _CommunityTabState extends State<CommunityTab> {
               if (err != null) {
                 toast(context, err);
               } else {
-                toast(context, '글이 등록됐어요');
+                toast(context, tr(lang, 'write_done'));
                 _reload();
               }
             }),
@@ -240,6 +252,7 @@ class _CommunityTabState extends State<CommunityTab> {
   }
 
   void _openPost(BuildContext context, CommunityPost p) {
+    final lang = context.read<AppState>().lang;
     Future<List<PostComment>> commentsF = supabase.fetchComments(p.id);
     final input = TextEditingController();
     showModalBottomSheet(
@@ -257,33 +270,33 @@ class _CommunityTabState extends State<CommunityTab> {
               Center(child: Container(width: 42, height: 5,
                   decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
               const SizedBox(height: 14),
-              Pill(p.category.isEmpty ? '기타' : p.category, bg: AppColors.seaSoft, fg: AppColors.seaDeep),
+              Pill(_catLabel(lang, p.category), bg: AppColors.seaSoft, fg: AppColors.seaDeep),
               const SizedBox(height: 8),
               Text(p.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4)),
               const SizedBox(height: 6),
-              const Text('🧑 익명', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+              Text(tr(lang, 'post_anon'), style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
               const SizedBox(height: 12),
               if (p.body.isNotEmpty)
                 Text(p.body, style: const TextStyle(fontSize: 14, height: 1.65)),
               if (p.aiAnswer != null && p.aiAnswer!.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                _cmt('✨ AI 도우미', p.aiAnswer!, true),
+                _cmt(tr(lang, 'ai_who'), p.aiAnswer!, true),
               ],
               const Divider(height: 28),
-              const Text('댓글', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              Text(tr(lang, 'cmt_label'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
               const SizedBox(height: 12),
               FutureBuilder<List<PostComment>>(
                 future: commentsF,
                 builder: (c, snap) {
                   final list = snap.data ?? const <PostComment>[];
                   if (snap.connectionState == ConnectionState.waiting) {
-                    return const Padding(padding: EdgeInsets.all(8), child: Text('불러오는 중…',
-                        style: TextStyle(color: AppColors.inkSoft, fontSize: 12)));
+                    return Padding(padding: const EdgeInsets.all(8), child: Text(tr(lang, 'cmt_loading'),
+                        style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)));
                   }
                   if (list.isEmpty) {
-                    return const Padding(padding: EdgeInsets.only(bottom: 8),
-                        child: Text('아직 댓글이 없어요 · 첫 댓글을 남겨보세요',
-                            style: TextStyle(color: AppColors.inkSoft, fontSize: 12)));
+                    return Padding(padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(tr(lang, 'cmt_empty'),
+                            style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)));
                   }
                   return Column(children: list.map((c) => _cmt(c.who, c.body, c.isAi)).toList());
                 },
@@ -294,7 +307,7 @@ class _CommunityTabState extends State<CommunityTab> {
                   child: TextField(
                     controller: input,
                     decoration: InputDecoration(
-                      hintText: '따뜻한 댓글을 남겨주세요',
+                      hintText: tr(lang, 'cmt_ph'),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                       enabledBorder: OutlineInputBorder(
@@ -316,19 +329,19 @@ class _CommunityTabState extends State<CommunityTab> {
                       final text = input.text.trim();
                       if (text.isEmpty) return;
                       final app = context.read<AppState>();
-                      final label = '나${app.nationality != null && app.nationality!.isNotEmpty ? ' · ${app.nationality}' : ''}';
+                      final label = '${tr(lang, 'cmt_me')}${app.nationality != null && app.nationality!.isNotEmpty ? ' · ${app.nationality}' : ''}';
                       final ok = await supabase.addComment(p.id, label, text);
                       if (!sheetCtx.mounted) return;
                       if (ok) {
                         input.clear();
                         setSheet(() => commentsF = supabase.fetchComments(p.id));
                       } else {
-                        toast(context, '댓글 등록에 실패했어요');
+                        toast(context, tr(lang, 'cmt_err'));
                       }
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-                      child: Text('등록', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                      child: Text(tr(lang, 'cmt_send'), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
                     ),
                   ),
                 ),
