@@ -159,7 +159,7 @@ class _MyCard extends StatelessWidget {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(name, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
             const SizedBox(height: 2),
-            Text('매일 출퇴근을 기록하면 임금을 스스로 지킬 수 있어요.',
+            Text(tr(lang, 'wp_mine_note'),
                 style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.4)),
           ]),
         ),

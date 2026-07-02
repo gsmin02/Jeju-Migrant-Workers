@@ -74,9 +74,9 @@ class _ProfileHero extends StatelessWidget {
                   children: [
                     _pill(tr(app.lang, 'p_name'), 'Bibek'),
                     const SizedBox(height: 8),
-                    _pill(tr(app.lang, 'p_site'), '한라양식'),
+                    _pill(tr(app.lang, 'p_site'), tr(app.lang, 'p_site_v')),
                     const SizedBox(height: 8),
-                    _pill(tr(app.lang, 'p_tenure'), '1년 2개월'),
+                    _pill(tr(app.lang, 'p_tenure'), tr(app.lang, 'p_tenure_v')),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => showShopSheet(context),
@@ -132,7 +132,7 @@ class _AttendCard extends StatelessWidget {
   const _AttendCard({required this.app});
   @override
   Widget build(BuildContext context) {
-    const days = ['월', '화', '수', '목', '금', '토', '일'];
+    final days = tr(app.lang, 'dow_mon').split(',');
     final doneCount = app.attended ? 3 : 2; // 월화(+오늘)
     return Container(
       padding: const EdgeInsets.all(14),
@@ -143,10 +143,10 @@ class _AttendCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('🍊 매일 출석 체크',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                Text(tr(app.lang, 'at_title'),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 3),
-                Text('출석할 때마다 +5P · 연속 ${app.attendStreak}일째',
+                Text('${tr(app.lang, 'at_sub')} ${app.attendStreak}${tr(app.lang, 'at_days')}',
                     style: const TextStyle(fontSize: 11.5, color: AppColors.inkSoft)),
               ],
             ),
@@ -156,7 +156,7 @@ class _AttendCard extends StatelessWidget {
                 ? null
                 : () {
                     app.checkAttend();
-                    toast(context, '🍊 출석 완료! +5P 적립 (총 ${app.points}P)');
+                    toast(context, tr(app.lang, 'at_toast').replaceAll('{p}', '${app.points}'));
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.sea,
@@ -165,7 +165,7 @@ class _AttendCard extends StatelessWidget {
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
             ),
-            child: Text(app.attended ? '출석 완료 ✓' : '출석 +5P',
+            child: Text(app.attended ? tr(app.lang, 'at_done') : tr(app.lang, 'at_btn'),
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
           ),
         ]),
@@ -214,6 +214,7 @@ class _WageChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,8 +266,8 @@ class _WageChartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          const Text('출처: 제주근로개선지도센터·제주도 (2021·2022년은 추정치)',
-              style: TextStyle(fontSize: 9.5, color: AppColors.inkSoft, fontStyle: FontStyle.italic)),
+          Text(tr(app.lang, 'h_data_note'),
+              style: const TextStyle(fontSize: 9.5, color: AppColors.inkSoft, fontStyle: FontStyle.italic)),
         ],
       ),
     );
@@ -276,11 +277,11 @@ class _WageChartCard extends StatelessWidget {
 class _NationalityCard extends StatelessWidget {
   const _NationalityCard();
   static const _nats = [
-    ['🇳🇵', '네팔', 1.0, '903', '+82%', false],
-    ['🇮🇩', '인도네시아', .97, '873', '+158%', true],
-    ['🇱🇰', '스리랑카', .53, '474', '+25%', false],
-    ['🇰🇭', '캄보디아', .37, '335', '+55%', false],
-    ['🇻🇳', '베트남', .23, '206', '+33%', false],
+    ['🇳🇵', 'nat_np', 1.0, '903', '+82%', false],
+    ['🇮🇩', 'nat_id', .97, '873', '+158%', true],
+    ['🇱🇰', 'nat_lk', .53, '474', '+25%', false],
+    ['🇰🇭', 'nat_kh', .37, '335', '+55%', false],
+    ['🇻🇳', 'nat_vn', .23, '206', '+33%', false],
   ];
 
   @override
@@ -301,7 +302,7 @@ class _NationalityCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   SizedBox(
                     width: 62,
-                    child: Text(n[1] as String,
+                    child: Text(tr(app.lang, n[1] as String),
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                   ),
                   Expanded(
@@ -330,9 +331,8 @@ class _NationalityCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.circular(11)),
-            child: const Text(
-                '💡 제주 E-9 노동자는 3년 만에 2,027명 → 3,519명(+73%)으로 늘었어요. 우리는 결코 소수가 아닙니다.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF5A4A2A), height: 1.5)),
+            child: Text(tr(app.lang, 'h_jeju_msg'),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF5A4A2A), height: 1.5)),
           ),
         ],
       ),
