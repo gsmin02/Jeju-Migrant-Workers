@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
+import '../services/supabase_service.dart';
 import '../widgets/common.dart';
 import '../widgets/paywall_sheet.dart';
 
@@ -14,10 +15,26 @@ class CommunityTab extends StatefulWidget {
 
 class _CommunityTabState extends State<CommunityTab> {
   bool hot = true;
+  late Future<List<CommunityPost>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = supabase.fetchPosts(hot: hot);
+  }
+
+  void _setSort(bool h) {
+    if (hot == h) return;
+    setState(() {
+      hot = h;
+      _future = supabase.fetchPosts(hot: hot);
+    });
+  }
+
+  void _reload() => setState(() => _future = supabase.fetchPosts(hot: hot));
 
   void _gate(BuildContext context, VoidCallback ok) {
-    final app = context.read<AppState>();
-    if (app.masked) {
+    if (context.read<AppState>().masked) {
       showPaywall(context);
     } else {
       ok();
@@ -32,7 +49,6 @@ class _CommunityTabState extends State<CommunityTab> {
       children: [
         ViewHeader(tr(app.lang, 'comm_title'), tr(app.lang, 'comm_sub')),
         if (!app.previewPaid) _freeBadge('🎉 오픈 기간 — 글쓰기·읽기 모두 무료예요'),
-        // 질문하기 박스
         GestureDetector(
           onTap: () => _gate(context, () => _openWrite(context)),
           child: Container(
@@ -56,37 +72,44 @@ class _CommunityTabState extends State<CommunityTab> {
         ),
         const SizedBox(height: 12),
         Row(children: [
-          _sortTab('🔥 인기순', hot, () => setState(() => hot = true)),
+          _sortTab('🔥 인기순', hot, () => _setSort(true)),
           const SizedBox(width: 8),
-          _sortTab('🕐 최신순', !hot, () => setState(() => hot = false)),
+          _sortTab('🕐 최신순', !hot, () => _setSort(false)),
         ]),
         const SizedBox(height: 12),
-        // 핀 고정
-        const Text('📌 오늘의 핫한 주제',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
-        const SizedBox(height: 8),
-        _postCard(context,
-            cat: '임금체불', meta: '🔥 조회 214 · 답변 6',
-            title: '사장이 "다음 달에 준다"만 반복해요',
-            body: '2달째 월급을 안 주는데 계속 미뤄요. 지금 뭘 해야 하나요?',
-            answer: '지금 바로 SOS 탭에서 1350 상담을 받으세요. GPS 근무기록을 캡처해두면 진정 접수 시 증거가 됩니다.',
-            hot: true),
-        const SectionLabel('인기 글'),
-        _postCard(context,
-            cat: '계약', meta: '👀 388 · 💬 9 · 어제',
-            title: '근로계약서를 안 써줬어요',
-            body: '일 시작한 지 한 달인데 계약서가 없어요. 이래도 되나요?',
-            comment: '익명 · 네팔  저도 계약서 없었는데 GPS 기록으로 해결했어요.'),
-        _postCard(context,
-            cat: '임금체불', meta: '👀 214 · 💬 6 · 3시간 전',
-            title: '양식장 3개월치 밀렸다가 받은 후기',
-            body: 'GPS 기록 제출했더니 사장이 인정했어요. 다들 꼭 매일 찍으세요! 🙏',
-            comment: '익명 · 인도네시아  축하해요! 저도 매일 찍고 있어요 🙏'),
-        _postCard(context,
-            cat: '제주생활', meta: '👀 96 · 💬 4 · 2일 전',
-            title: '성산에서 병원 갈 때 통역 되는 곳?',
-            body: '아파서 병원 가야 하는데 한국어가 서툴러요.',
-            comment: '익명 · 베트남  외국인노동자지원센터(064-712-1141)에 전화하면 통역 도와줘요.'),
+        FutureBuilder<List<CommunityPost>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: CircularProgressIndicator(color: AppColors.sea)),
+              );
+            }
+            final posts = snap.data ?? const <CommunityPost>[];
+            if (posts.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text('아직 글이 없어요 · 첫 글을 남겨보세요',
+                      style: TextStyle(color: AppColors.inkSoft, fontSize: 13)),
+                ),
+              );
+            }
+            final pinned = posts.where((p) => p.pinned).toList();
+            final rest = posts.where((p) => !p.pinned).toList();
+            return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (pinned.isNotEmpty) ...[
+                const Text('📌 오늘의 핫한 주제',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
+                const SizedBox(height: 8),
+                ...pinned.map((p) => _postCard(context, p)),
+              ],
+              SectionLabel(hot ? '인기 글' : '최신 글'),
+              ...rest.map((p) => _postCard(context, p)),
+            ]);
+          },
+        ),
       ],
     );
   }
@@ -116,32 +139,32 @@ class _CommunityTabState extends State<CommunityTab> {
         ),
       );
 
-  Widget _postCard(BuildContext context,
-      {required String cat, required String meta, required String title, required String body,
-      String? answer, String? comment, bool hot = false}) {
+  Widget _postCard(BuildContext context, CommunityPost p) {
     return GestureDetector(
-      onTap: () => _gate(context, () => _openPost(context, title, body)),
+      onTap: () => _gate(context, () => _openPost(context, p)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: hot ? null : AppColors.card,
-          gradient: hot ? const LinearGradient(colors: [Color(0xFFFFFDF5), AppColors.seaSoft]) : null,
+          color: p.pinned ? null : AppColors.card,
+          gradient: p.pinned ? const LinearGradient(colors: [Color(0xFFFFFDF5), AppColors.seaSoft]) : null,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: hot ? AppColors.sea : AppColors.line, width: hot ? 1.5 : 1),
+          border: Border.all(color: p.pinned ? AppColors.sea : AppColors.line, width: p.pinned ? 1.5 : 1),
           boxShadow: kCardShadow,
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Pill(cat, bg: AppColors.seaSoft, fg: AppColors.seaDeep),
+            Pill(p.category.isEmpty ? '기타' : p.category, bg: AppColors.seaSoft, fg: AppColors.seaDeep),
             const Spacer(),
-            Text(meta, style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
+            Text('👍 ${p.likes}', style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
           ]),
           const SizedBox(height: 7),
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 5),
-          Text(body, style: const TextStyle(fontSize: 12.5, color: Color(0xFF3A4A55), height: 1.4)),
-          if (answer != null) ...[
+          Text(p.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+          if (p.body.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Text(p.body, style: const TextStyle(fontSize: 12.5, color: Color(0xFF3A4A55), height: 1.4)),
+          ],
+          if (p.aiAnswer != null && p.aiAnswer!.isNotEmpty) ...[
             const SizedBox(height: 9),
             Container(
               padding: const EdgeInsets.all(10),
@@ -150,20 +173,8 @@ class _CommunityTabState extends State<CommunityTab> {
                 const Text('✨ AI 도우미 + 선배 노동자',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
                 const SizedBox(height: 3),
-                Text(answer, style: const TextStyle(fontSize: 12, height: 1.4)),
+                Text(p.aiAnswer!, style: const TextStyle(fontSize: 12, height: 1.4)),
               ]),
-            ),
-          ],
-          if (comment != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFAF6EA),
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-              ),
-              child: Text('💬 $comment',
-                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF55503F), height: 1.4)),
             ),
           ],
         ]),
@@ -172,60 +183,158 @@ class _CommunityTabState extends State<CommunityTab> {
   }
 
   void _openWrite(BuildContext context) {
+    final titleC = TextEditingController();
+    final bodyC = TextEditingController();
+    String category = '임금체불';
+    const cats = ['임금체불', '계약', '비자', '제주생활', '기타'];
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(18, 12, 18, MediaQuery.of(context).viewInsets.bottom + 26),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 42, height: 5,
-              decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
-          const SizedBox(height: 14),
-          const Text('✍️ 글 쓰기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 12),
-          const TextField(decoration: InputDecoration(hintText: '제목을 입력하세요', border: OutlineInputBorder())),
-          const SizedBox(height: 8),
-          const TextField(maxLines: 4, decoration: InputDecoration(hintText: '내용을 자유롭게 적어주세요', border: OutlineInputBorder())),
-          const SizedBox(height: 14),
-          BigButton('올리기 (+50P)', () {
-            context.read<AppState>().points; // no-op read
-            Navigator.pop(context);
-            toast(context, '글이 등록됐어요 · +50P (데모)');
-          }),
-        ]),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setSheet) => Padding(
+          padding: EdgeInsets.fromLTRB(18, 12, 18, MediaQuery.of(sheetCtx).viewInsets.bottom + 26),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Center(child: Container(width: 42, height: 5,
+                decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
+            const SizedBox(height: 14),
+            const Text('✍️ 글 쓰기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            Wrap(spacing: 6, children: [
+              for (final c in cats)
+                GestureDetector(
+                  onTap: () => setSheet(() => category = c),
+                  child: Pill(c,
+                      bg: category == c ? AppColors.sea : AppColors.seaSoft,
+                      fg: category == c ? Colors.white : AppColors.seaDeep),
+                ),
+            ]),
+            const SizedBox(height: 10),
+            TextField(controller: titleC,
+                decoration: const InputDecoration(hintText: '제목을 입력하세요', border: OutlineInputBorder())),
+            const SizedBox(height: 8),
+            TextField(controller: bodyC, maxLines: 4,
+                decoration: const InputDecoration(hintText: '내용을 자유롭게 적어주세요', border: OutlineInputBorder())),
+            const SizedBox(height: 14),
+            BigButton('올리기 (+50P)', () async {
+              final title = titleC.text.trim();
+              if (title.isEmpty) {
+                toast(context, '제목을 입력해 주세요');
+                return;
+              }
+              final err = await supabase.addPost(category, title, bodyC.text.trim());
+              if (!sheetCtx.mounted) return;
+              Navigator.pop(sheetCtx);
+              if (err != null) {
+                toast(context, err);
+              } else {
+                toast(context, '글이 등록됐어요');
+                _reload();
+              }
+            }),
+          ]),
+        ),
       ),
     );
   }
 
-  void _openPost(BuildContext context, String title, String body) {
+  void _openPost(BuildContext context, CommunityPost p) {
+    Future<List<PostComment>> commentsF = supabase.fetchComments(p.id);
+    final input = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.paper,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false, initialChildSize: .8, maxChildSize: .92,
-        builder: (_, ctrl) => SingleChildScrollView(
-          controller: ctrl,
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 26),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Center(child: Container(width: 42, height: 5,
-                decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
-            const SizedBox(height: 14),
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4)),
-            const SizedBox(height: 6),
-            const Text('🧑 익명 · 네팔', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
-            const SizedBox(height: 12),
-            Text(body, style: const TextStyle(fontSize: 14, height: 1.65)),
-            const Divider(height: 28),
-            const Text('댓글 3', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            _cmt('✨ AI 도우미', '축하해요! 아직 못 받은 분들은 SOS 탭의 1350 상담과 대지급금 제도를 확인하세요.', true),
-            _cmt('🧑 익명 · 인도네시아', '저도 2달 밀렸어요. GPS 기록 매일 찍고 있어요. 힘이 되네요.', false),
-            _cmt('🧑 익명 · 베트남', '어느 지원센터 통해서 받으셨어요? 저도 상담받고 싶어요.', false),
-          ]),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (sheetCtx, setSheet) => DraggableScrollableSheet(
+          expand: false, initialChildSize: .8, maxChildSize: .92,
+          builder: (_, ctrl) => SingleChildScrollView(
+            controller: ctrl,
+            padding: EdgeInsets.fromLTRB(18, 12, 18, MediaQuery.of(sheetCtx).viewInsets.bottom + 20),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Center(child: Container(width: 42, height: 5,
+                  decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(99)))),
+              const SizedBox(height: 14),
+              Pill(p.category.isEmpty ? '기타' : p.category, bg: AppColors.seaSoft, fg: AppColors.seaDeep),
+              const SizedBox(height: 8),
+              Text(p.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, height: 1.4)),
+              const SizedBox(height: 6),
+              const Text('🧑 익명', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+              const SizedBox(height: 12),
+              if (p.body.isNotEmpty)
+                Text(p.body, style: const TextStyle(fontSize: 14, height: 1.65)),
+              if (p.aiAnswer != null && p.aiAnswer!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _cmt('✨ AI 도우미', p.aiAnswer!, true),
+              ],
+              const Divider(height: 28),
+              const Text('댓글', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              FutureBuilder<List<PostComment>>(
+                future: commentsF,
+                builder: (c, snap) {
+                  final list = snap.data ?? const <PostComment>[];
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Padding(padding: EdgeInsets.all(8), child: Text('불러오는 중…',
+                        style: TextStyle(color: AppColors.inkSoft, fontSize: 12)));
+                  }
+                  if (list.isEmpty) {
+                    return const Padding(padding: EdgeInsets.only(bottom: 8),
+                        child: Text('아직 댓글이 없어요 · 첫 댓글을 남겨보세요',
+                            style: TextStyle(color: AppColors.inkSoft, fontSize: 12)));
+                  }
+                  return Column(children: list.map((c) => _cmt(c.who, c.body, c.isAi)).toList());
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: input,
+                    decoration: InputDecoration(
+                      hintText: '따뜻한 댓글을 남겨주세요',
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: AppColors.line, width: 1.5)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: AppColors.sea, width: 1.5)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Material(
+                  color: AppColors.sea,
+                  borderRadius: BorderRadius.circular(20),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      final text = input.text.trim();
+                      if (text.isEmpty) return;
+                      final app = context.read<AppState>();
+                      final label = '나${app.nationality != null && app.nationality!.isNotEmpty ? ' · ${app.nationality}' : ''}';
+                      final ok = await supabase.addComment(p.id, label, text);
+                      if (!sheetCtx.mounted) return;
+                      if (ok) {
+                        input.clear();
+                        setSheet(() => commentsF = supabase.fetchComments(p.id));
+                      } else {
+                        toast(context, '댓글 등록에 실패했어요');
+                      }
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                      child: Text('등록', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ),
+              ]),
+            ]),
+          ),
         ),
       ),
     );

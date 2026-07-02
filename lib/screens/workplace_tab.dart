@@ -4,6 +4,7 @@ import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
 import '../data/workplaces.dart';
+import '../services/supabase_service.dart';
 import '../widgets/common.dart';
 import '../widgets/paywall_sheet.dart';
 
@@ -16,91 +17,110 @@ class WorkplaceTab extends StatefulWidget {
 
 class _WorkplaceTabState extends State<WorkplaceTab> {
   String query = '';
+  late Future<List<Workplace>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = supabase.fetchWorkplaces();
+  }
 
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final lang = app.lang;
     final masked = app.masked;
-
     final q = query.trim().toLowerCase();
-    final filtered = q.isEmpty
-        ? kWorkplaces
-        : kWorkplaces
-            .where((w) =>
-                w.name.toLowerCase().contains(q) ||
-                w.region.toLowerCase().contains(q) ||
-                w.job.toLowerCase().contains(q) ||
-                w.industry.toLowerCase().contains(q))
-            .toList();
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
-      children: [
-        ViewHeader(tr(lang, 'work_title'), tr(lang, 'work_sub')),
-        if (!app.previewPaid) _freeBadge(tr(lang, 'free_badge')),
-        // 유료 전환 미리보기 토글
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          Text(tr(lang, 'wp_preview'),
-              style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
-          Transform.scale(
-            scale: .8,
-            child: Switch(
-              value: app.previewPaid,
-              activeThumbColor: AppColors.sea,
-              onChanged: (v) => app.setPreviewPaid(v),
+    return FutureBuilder<List<Workplace>>(
+      future: _future,
+      builder: (context, snap) {
+        final all = snap.data ?? const <Workplace>[];
+        final loading = snap.connectionState == ConnectionState.waiting;
+        final filtered = q.isEmpty
+            ? all
+            : all
+                .where((w) =>
+                    w.name.toLowerCase().contains(q) ||
+                    w.region.toLowerCase().contains(q) ||
+                    w.job.toLowerCase().contains(q) ||
+                    w.industry.toLowerCase().contains(q))
+                .toList();
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
+          children: [
+            ViewHeader(tr(lang, 'work_title'), tr(lang, 'work_sub')),
+            if (!app.previewPaid) _freeBadge(tr(lang, 'free_badge')),
+            // 유료 전환 미리보기 토글
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              Text(tr(lang, 'wp_preview'),
+                  style: const TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
+              Transform.scale(
+                scale: .8,
+                child: Switch(
+                  value: app.previewPaid,
+                  activeThumbColor: AppColors.sea,
+                  onChanged: (v) => app.setPreviewPaid(v),
+                ),
+              ),
+            ]),
+            TextField(
+              onChanged: (v) => setState(() => query = v),
+              decoration: InputDecoration(
+                hintText: tr(lang, 'work_search'),
+                isDense: true,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(color: AppColors.line)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(color: AppColors.line)),
+              ),
             ),
-          ),
-        ]),
-        TextField(
-          onChanged: (v) => setState(() => query = v),
-          decoration: InputDecoration(
-            hintText: tr(lang, 'work_search'),
-            isDense: true,
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: AppColors.line)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(color: AppColors.line)),
-          ),
-        ),
-        if (q.isEmpty) ...[
-          SectionLabel(tr(lang, 'work_my')),
-          _MyCard(lang: lang),
-        ],
-        SectionLabel('${tr(lang, 'work_hiring')} · ${filtered.length}'),
-        if (filtered.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 28),
-            child: Center(
-              child: Text(tr(lang, 'work_none'),
-                  style: const TextStyle(color: AppColors.inkSoft, fontSize: 13)),
+            if (app.workplace != null && app.workplace!.isNotEmpty && q.isEmpty) ...[
+              SectionLabel(tr(lang, 'work_my')),
+              _MyCard(lang: lang, name: app.workplace!),
+            ],
+            SectionLabel('${tr(lang, 'work_hiring')} · ${filtered.length}'),
+            if (loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: CircularProgressIndicator(color: AppColors.sea)),
+              )
+            else if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                child: Center(
+                  child: Text(tr(lang, 'work_none'),
+                      style: const TextStyle(color: AppColors.inkSoft, fontSize: 13)),
+                ),
+              )
+            else
+              for (final w in filtered)
+                _WpCard(
+                  wp: w,
+                  lang: lang,
+                  masked: masked && w.flagged,
+                  onTapLocked: () => showPaywall(context),
+                ),
+            const SizedBox(height: 2),
+            Text(tr(lang, 'wp_src'),
+                style: const TextStyle(
+                    fontSize: 9.5, color: AppColors.inkSoft, fontStyle: FontStyle.italic)),
+            const SizedBox(height: 10),
+            BigButton(
+              tr(lang, 'work_report_btn'),
+              () => toast(context, tr(lang, 'work_report_toast')),
+              sub: tr(lang, 'work_report_sub'),
+              color: Colors.white,
             ),
-          )
-        else
-          for (final w in filtered)
-            _WpCard(
-              wp: w,
-              lang: lang,
-              masked: masked && w.flagged,
-              onTapLocked: () => showPaywall(context),
-            ),
-        const SizedBox(height: 2),
-        Text(tr(lang, 'wp_src'),
-            style: const TextStyle(
-                fontSize: 9.5, color: AppColors.inkSoft, fontStyle: FontStyle.italic)),
-        const SizedBox(height: 10),
-        BigButton(
-          tr(lang, 'work_report_btn'),
-          () => toast(context, tr(lang, 'work_report_toast')),
-          sub: tr(lang, 'work_report_sub'),
-          color: Colors.white,
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -117,26 +137,35 @@ class _WorkplaceTabState extends State<WorkplaceTab> {
       );
 }
 
-/// 내 사업장 카드 (한라양식).
+/// 내 사업장 카드 — 프로필에 등록한 사업장 이름을 보여준다.
 class _MyCard extends StatelessWidget {
-  const _MyCard({required this.lang});
+  const _MyCard({required this.lang, required this.name});
   final String lang;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
-    const wp = kMyWorkplace;
-    return _WorkplaceCardShell(
-      icon: wp.icon,
-      iconBg: AppColors.seaSoft,
-      name: wp.name,
-      type: '${wp.job} · ${wp.region}',
-      pay: wp.pay,
-      badge: Pill(tr(lang, 'wp_clean'), bg: AppColors.greenSoft, fg: AppColors.green),
-      stats: [
-        ['1년 2개월', tr(lang, 'wp_tenure')],
-        ['${wp.workers}명', tr(lang, 'wp_workers')],
-        ['0건', tr(lang, 'wp_reports')],
-      ],
+    return AppCard(
+      child: Row(children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(color: AppColors.seaSoft, borderRadius: BorderRadius.circular(11)),
+          alignment: Alignment.center,
+          child: const Text('🏢', style: TextStyle(fontSize: 20)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text('매일 출퇴근을 기록하면 임금을 스스로 지킬 수 있어요.',
+                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.4)),
+          ]),
+        ),
+        const SizedBox(width: 8),
+        Pill(tr(lang, 'wp_clean'), bg: AppColors.greenSoft, fg: AppColors.green),
+      ]),
     );
   }
 }

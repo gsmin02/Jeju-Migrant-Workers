@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
+import '../services/supabase_service.dart';
 import '../widgets/citrus_mark.dart';
 import 'home_tab.dart';
 import 'record_tab.dart';
@@ -19,6 +20,15 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int idx = const int.fromEnvironment('TAB', defaultValue: 0);
   static const _views = ['home', 'record', 'work', 'comm', 'sos'];
+
+  @override
+  void initState() {
+    super.initState();
+    // 로그인 후 진입 시 프로필·근무기록을 DB에서 로드.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AppState>().onLoggedIn();
+    });
+  }
 
   void goTab(int i) => setState(() => idx = i);
 
@@ -61,6 +71,14 @@ class _MainShellState extends State<MainShell> {
                             color: Colors.white24, borderRadius: BorderRadius.circular(20)),
                         child: Text('🌐 ${AppState.langLabels[app.lang]}',
                             style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () => supabase.signOut(), // AuthGate가 로그인 화면으로 전환
+                      child: const Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(Icons.logout, color: Colors.white70, size: 20),
                       ),
                     ),
                   ],

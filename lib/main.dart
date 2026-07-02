@@ -3,56 +3,44 @@ import 'package:provider/provider.dart';
 import 'theme.dart';
 import 'state/app_state.dart';
 import 'services/supabase_service.dart';
-import 'screens/onboarding.dart';
+import 'screens/auth.dart';
 import 'screens/main_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await supabase.init(); // 실패해도 앱은 계속 (폴백)
+  await supabase.init(); // 실패해도 앱은 계속 (인증 화면 노출)
   runApp(
     ChangeNotifierProvider(create: (_) => AppState(), child: const JejuPayApp()),
   );
 }
 
-/// 온보딩 단계 (언어 선택 화면 제거 — 시스템 로케일로 자동 시작)
-enum AppStage { signup, worksite, main }
-
-class JejuPayApp extends StatefulWidget {
+class JejuPayApp extends StatelessWidget {
   const JejuPayApp({super.key});
   @override
-  State<JejuPayApp> createState() => _JejuPayAppState();
-}
-
-class _JejuPayAppState extends State<JejuPayApp> {
-  // 언어는 시스템 로케일로 자동 설정되므로 회원가입부터 시작.
-  // 검증용으로 --dart-define=START=main 지정 가능.
-  AppStage stage = const String.fromEnvironment('START') == 'main'
-      ? AppStage.main
-      : AppStage.signup;
-  void go(AppStage s) => setState(() => stage = s);
-
-  @override
   Widget build(BuildContext context) {
-    Widget body;
-    switch (stage) {
-      case AppStage.signup:
-        body = SignupScreen(
-          onNext: () => go(AppStage.worksite),
-          onSkip: () => go(AppStage.main),
-        );
-        break;
-      case AppStage.worksite:
-        body = WorksiteScreen(onDone: () => go(AppStage.main));
-        break;
-      case AppStage.main:
-        body = const MainShell();
-        break;
-    }
     return MaterialApp(
       title: 'Jeju Migrant Workers',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
-      home: body,
+      home: const AuthGate(),
+    );
+  }
+}
+
+/// 로그인 세션이 있을 때만 메인을 보여준다. 없으면 로그인/회원가입 화면.
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+  @override
+  Widget build(BuildContext context) {
+    if (!supabase.ready) return const AuthScreen(); // 초기화 실패 시에도 인증부터
+    return StreamBuilder(
+      stream: supabase.onAuthChange,
+      builder: (context, _) {
+        if (supabase.isLoggedIn) return const MainShell();
+        // 로그아웃 상태면 로드 플래그 초기화
+        context.read<AppState>().resetForLogout();
+        return const AuthScreen();
+      },
     );
   }
 }
