@@ -207,4 +207,21 @@ insert into public.community_posts (category, title, body, ai_answer, likes, pin
 ('임금체불','사장이 "다음 달에 준다"만 반복해요','2달째 월급을 안 주는데 계속 미뤄요. 지금 뭘 해야 하나요?','지금 바로 SOS 탭에서 1350 상담을 받으세요. GPS 근무기록을 캡처해두면 진정 접수 시 증거가 됩니다.',6,true),
 ('계약','근로계약서를 안 써줬어요','일 시작한 지 한 달인데 계약서가 없어요. 이래도 되나요?',null,9,false),
 ('임금체불','양식장 3개월치 밀렸다가 받은 후기','GPS 기록 제출했더니 사장이 인정했어요. 다들 꼭 매일 찍으세요! 🙏',null,47,false),
-('제주생활','성산에서 병원 갈 때 통역 되는 곳?','아파서 병원 가야 하는데 한국어가 서툴러요.',null,6,false);
+('제주생활','성산에서 병원 갈 때 통역 되는 곳?','아파서 병원 가야 하는데 한국어가 서툴러요.',null,6,false),
+('비자','E-9에서 E-7-4(숙련기능인력)로 바꾸려면?','성실근로자인데 장기체류 비자로 변경하는 조건이 궁금해요.',null,12,false),
+('제주생활','서귀포에서 방 구할 때 보증금 시세?','월세 방을 구하는데 보증금이 보통 얼마 정도인가요?',null,8,false);
+
+-- 커뮤니티 시드 댓글 (author null = 운영/AI 시드). post_id는 제목으로 매칭.
+delete from public.community_comments where author is null;
+insert into public.community_comments (post_id, author_label, body, is_ai)
+select id, '익명 · 네팔', '저도 같은 일 겪었어요. 1350에 전화하니 통역해서 바로 도와줬어요.', false from public.community_posts where title = '사장이 "다음 달에 준다"만 반복해요'
+union all
+select id, '익명 · 베트남', 'GPS 출퇴근 기록 꼭 캡처해두세요. 나중에 강력한 증거가 됩니다.', false from public.community_posts where title = '사장이 "다음 달에 준다"만 반복해요'
+union all
+select id, '✨ AI 도우미', '계약서가 없어도 근로 사실은 인정됩니다(근로기준법 제17조 위반). GPS 출퇴근 기록·급여 이체 내역·동료 진술이 증거가 돼요.', true from public.community_posts where title = '근로계약서를 안 써줬어요'
+union all
+select id, '익명 · 인도네시아', '저는 사장이 문자로 보낸 근무조건을 저장해뒀는데 그것도 증거가 된대요.', false from public.community_posts where title = '근로계약서를 안 써줬어요'
+union all
+select id, '익명 · 캄보디아', '축하해요! 저도 오늘부터 매일 찍을게요 🙏', false from public.community_posts where title = '양식장 3개월치 밀렸다가 받은 후기'
+union all
+select id, '익명 · 베트남', '제주외국인노동자지원센터(064-712-1141)에 전화하면 병원 통역을 도와줘요.', false from public.community_posts where title = '성산에서 병원 갈 때 통역 되는 곳?';

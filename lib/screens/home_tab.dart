@@ -7,6 +7,8 @@ import '../state/i18n.dart';
 import '../data/avatar_svgs.dart';
 import '../widgets/common.dart';
 import '../widgets/shop_sheet.dart';
+import '../widgets/invite_sheet.dart';
+import '../widgets/profile_edit_sheet.dart';
 
 class HomeTab extends StatelessWidget {
   final ValueChanged<int> onGoTab;
@@ -122,12 +124,38 @@ class _ProfileHero extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+                child: _heroBtn('✏️ ${tr(app.lang, 'p_edit')}',
+                    () => showProfileEditSheet(context))),
+            const SizedBox(width: 8),
+            Expanded(child: _heroBtn(tr(app.lang, 'iv_title'), () => showInviteSheet(context))),
+          ]),
           const SizedBox(height: 12),
           _AttendCard(app: app),
         ],
       ),
     );
   }
+
+  Widget _heroBtn(String label, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFFF0D9B0), width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 11.5, fontWeight: FontWeight.w800, color: AppColors.seaDeep)),
+        ),
+      );
 
   Widget _pill(String label, String value) => Container(
         width: double.infinity,
@@ -211,11 +239,15 @@ class _AttendCard extends StatelessWidget {
                       style: TextStyle(fontSize: done ? 15 : 15, color: const Color(0xFFC9BDA0))),
                 ),
                 const SizedBox(height: 3),
-                Text('${dates[i].day}',
+                Text('${dates[i].month}/${dates[i].day}',
                     style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: today ? FontWeight.w800 : FontWeight.w500,
+                        fontSize: 9.5,
+                        fontWeight: today ? FontWeight.w800 : FontWeight.w600,
                         color: today ? AppColors.seaDeep : AppColors.inkSoft)),
+                Text(tr(app.lang, 'weekdays').split(',')[dates[i].weekday % 7],
+                    style: TextStyle(
+                        fontSize: 9,
+                        color: today ? AppColors.sea : const Color(0xFFB0A98F))),
               ]),
             );
           }),

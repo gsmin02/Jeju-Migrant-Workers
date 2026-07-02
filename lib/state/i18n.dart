@@ -135,7 +135,8 @@ const Map<String, Map<String, String>> kI18n = {
     'pr_none': '없음', 'pr_basket': '감귤바구니', 'pr_flower': '동백꽃', 'pr_rake': '갈퀴',
     // 로그인/회원가입
     'au_login': '로그인', 'au_signup': '회원가입',
-    'au_next': '다음', 'au_back': '뒤로',
+    'au_next': '다음', 'au_back': '뒤로', 'au_skip': '건너뛰기',
+    'pe_save': '저장', 'pe_done': '프로필이 저장됐어요',
     // 튜토리얼(3슬라이드, 건너뛰기 없음)
     'tut1_t': '매일 찍는 출퇴근이\n증거가 됩니다',
     'tut1_d': 'GPS로 남긴 근무 기록은 임금체불이 생겼을 때 노동청에 제출할 수 있는 강력한 증거예요. 계약서가 없어도, 기록이 당신이 일했다는 걸 증명해요.',
@@ -342,7 +343,8 @@ const Map<String, Map<String, String>> kI18n = {
     'pr_none': 'None', 'pr_basket': 'Citrus basket', 'pr_flower': 'Camellia', 'pr_rake': 'Rake',
     // Auth
     'au_login': 'Log in', 'au_signup': 'Sign up',
-    'au_next': 'Next', 'au_back': 'Back',
+    'au_next': 'Next', 'au_back': 'Back', 'au_skip': 'Skip',
+    'pe_save': 'Save', 'pe_done': 'Profile saved',
     // Tutorial (3 slides, no skip)
     'tut1_t': 'Daily clock-ins\nbecome evidence',
     'tut1_d': 'GPS work records are strong evidence you can submit to the labor office if wages go unpaid. Even without a contract, your log proves you worked.',
@@ -547,7 +549,8 @@ const Map<String, Map<String, String>> kI18n = {
     'pr_none': 'Không', 'pr_basket': 'Giỏ quýt', 'pr_flower': 'Hoa trà', 'pr_rake': 'Cào',
     // Đăng nhập/đăng ký
     'au_login': 'Đăng nhập', 'au_signup': 'Đăng ký',
-    'au_next': 'Tiếp', 'au_back': 'Quay lại',
+    'au_next': 'Tiếp', 'au_back': 'Quay lại', 'au_skip': 'Bỏ qua',
+    'pe_save': 'Lưu', 'pe_done': 'Đã lưu hồ sơ',
     // Hướng dẫn (3 slide, không bỏ qua)
     'tut1_t': 'Chấm công mỗi ngày\ntrở thành bằng chứng',
     'tut1_d': 'Ghi nhận GPS là bằng chứng mạnh mẽ có thể nộp cho cơ quan lao động khi bị nợ lương. Dù không có hợp đồng, nhật ký chứng minh bạn đã làm việc.',
@@ -752,7 +755,8 @@ const Map<String, Map<String, String>> kI18n = {
     'pr_none': 'Tidak ada', 'pr_basket': 'Keranjang jeruk', 'pr_flower': 'Kamelia', 'pr_rake': 'Garu',
     // Masuk/Daftar
     'au_login': 'Masuk', 'au_signup': 'Daftar',
-    'au_next': 'Lanjut', 'au_back': 'Kembali',
+    'au_next': 'Lanjut', 'au_back': 'Kembali', 'au_skip': 'Lewati',
+    'pe_save': 'Simpan', 'pe_done': 'Profil disimpan',
     // Tutorial (3 slide, tanpa lewati)
     'tut1_t': 'Absen harian\nmenjadi bukti',
     'tut1_d': 'Catatan kerja GPS adalah bukti kuat yang bisa diserahkan ke kantor tenaga kerja saat upah tak dibayar. Meski tanpa kontrak, catatan membuktikan Anda bekerja.',

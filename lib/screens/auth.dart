@@ -205,19 +205,21 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: TextButton(
                   onPressed: loading
                       ? null
-                      : () => setState(() {
-                            if (worksite) {
-                              signupStep = 1;
-                            } else {
-                              signupMode = !signupMode;
-                              signupStep = 1;
-                            }
+                      : () {
+                          if (worksite) {
+                            _submit(); // 건너뛰기 = 사업지 없이 바로 가입
+                            return;
+                          }
+                          setState(() {
+                            signupMode = !signupMode;
+                            signupStep = 1;
                             error = null;
                             notice = null;
-                          }),
+                          });
+                        },
                   child: Text(
                     worksite
-                        ? tr(lang, 'au_back')
+                        ? tr(lang, 'au_skip')
                         : tr(lang, signupMode ? 'au_to_login' : 'au_to_signup'),
                     style: const TextStyle(
                         color: AppColors.seaDeep, fontSize: 13, fontWeight: FontWeight.w700),

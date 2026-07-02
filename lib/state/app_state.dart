@@ -198,6 +198,23 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 프로필 편집 저장 (이름·사업지·근속·국적). 즉시 반영 후 DB에 저장.
+  Future<void> updateProfile(
+      {String? name, String? workplace, String? tenure, String? nationality}) async {
+    if (name != null) this.name = name;
+    if (workplace != null) this.workplace = workplace;
+    if (tenure != null) this.tenure = tenure;
+    if (nationality != null) this.nationality = nationality;
+    notifyListeners();
+    // tenure 컬럼이 없을 수도 있어(마이그레이션 전) 분리 저장 — 이름 등은 항상 반영됨.
+    await supabase.saveProfile({
+      'name': this.name,
+      'workplace': this.workplace,
+      'nationality': this.nationality,
+    });
+    await supabase.saveProfile({'tenure': this.tenure});
+  }
+
   /// 초대 코드 사용. 성공 시 내 포인트 +bonus.
   /// 반환: 'ok' / 'already' / 'notfound' / 'self' / 'auth' / 'err'
   Future<String> redeemInvite(String code) async {
