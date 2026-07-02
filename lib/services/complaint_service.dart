@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 
 /// 진정서 생성 결과
@@ -14,8 +14,11 @@ class ComplaintResult {
 /// iOS 시뮬레이터는 호스트 localhost 공유 → localhost:8080 직접 접근.
 class ComplaintService {
   String get _base {
-    // Android 에뮬레이터는 10.0.2.2, iOS 시뮬레이터·데스크톱은 localhost
-    if (!Platform.isIOS && !Platform.isMacOS) return 'http://10.0.2.2:8080';
+    // Android 에뮬레이터만 10.0.2.2, 그 외(웹·iOS·데스크톱)는 localhost.
+    // dart:io 대신 kIsWeb/defaultTargetPlatform을 써서 웹에서도 컴파일된다.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8080';
+    }
     return 'http://localhost:8080';
   }
 
