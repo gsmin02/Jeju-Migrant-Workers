@@ -16,8 +16,17 @@ create table if not exists public.profiles (
   points        int  not null default 0,
   attend_streak int  not null default 0,
   last_attend   date,
+  skin_color    text not null default '#f0c093',
+  cloth_kind    text not null default 'farm',
+  hat_name      text not null default '귤모자',
+  prop_kind     text not null default 'none',
   created_at    timestamptz not null default now()
 );
+-- 아바타 컬럼 (기존 DB 대상 멱등 마이그레이션)
+alter table public.profiles add column if not exists skin_color text not null default '#f0c093';
+alter table public.profiles add column if not exists cloth_kind text not null default 'farm';
+alter table public.profiles add column if not exists hat_name   text not null default '귤모자';
+alter table public.profiles add column if not exists prop_kind  text not null default 'none';
 alter table public.profiles enable row level security;
 drop policy if exists "profiles self select" on public.profiles;
 drop policy if exists "profiles self insert" on public.profiles;

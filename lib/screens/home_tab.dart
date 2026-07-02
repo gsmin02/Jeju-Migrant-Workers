@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../theme.dart';
 import '../state/app_state.dart';
 import '../state/i18n.dart';
+import '../data/avatar_svgs.dart';
 import '../widgets/common.dart';
 import '../widgets/shop_sheet.dart';
 
@@ -64,7 +66,18 @@ class _ProfileHero extends StatelessWidget {
                     border: Border.all(color: AppColors.ink, width: 2.5),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(child: Text('🧑‍🌾', style: TextStyle(fontSize: 54))),
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: SvgPicture.string(
+                      buildProfileAvatarSvg(
+                        hatName: app.hatBigName,
+                        skinColor: app.skinColor,
+                        clothKind: app.clothKind,
+                        propKind: app.propKind,
+                      ),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

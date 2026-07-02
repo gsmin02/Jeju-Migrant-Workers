@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../services/supabase_service.dart';
+import '../data/avatar_svgs.dart';
 
 class WorkLog {
   final String date;
@@ -36,6 +37,13 @@ class AppState extends ChangeNotifier {
   int points = 0;
   int attendStreak = 0;
   bool attended = false;
+
+  // ----- 아바타 커스터마이징 (DB: profiles) -----
+  String skinColor = '#f0c093';
+  String clothKind = 'farm';
+  String hatName = '귤모자'; // 상점 미리보기 모자
+  String hatBigName = '귤모자'; // 홈 프로필 모자 (kHatsBig에 있는 것만 반영)
+  String propKind = 'none';
 
   // ----- 근무 기록 (DB: work_logs) -----
   final List<WorkLog> logs = [];
@@ -79,6 +87,13 @@ class AppState extends ChangeNotifier {
       final last = p['last_attend'] as String?;
       final today = DateTime.now().toIso8601String().substring(0, 10);
       attended = last == today;
+      // 아바타 장착 상태 복원
+      skinColor = (p['skin_color'] as String?) ?? skinColor;
+      clothKind = (p['cloth_kind'] as String?) ?? clothKind;
+      final hn = (p['hat_name'] as String?) ?? hatName;
+      hatName = hn;
+      hatBigName = kBigHatNames.contains(hn) ? hn : '귤모자';
+      propKind = (p['prop_kind'] as String?) ?? propKind;
     }
 
     final rows = await supabase.fetchLogs();
@@ -120,6 +135,32 @@ class AppState extends ChangeNotifier {
   void setJobAd(String name) {
     jobAd = name;
     notifyListeners();
+  }
+
+  // ----- 아바타 장착 (변경 즉시 DB profiles에 저장) -----
+  void equipSkin(String color) {
+    skinColor = color;
+    notifyListeners();
+    supabase.saveProfile({'skin_color': color});
+  }
+
+  void equipCloth(String kind) {
+    clothKind = kind;
+    notifyListeners();
+    supabase.saveProfile({'cloth_kind': kind});
+  }
+
+  void equipHat(String name) {
+    hatName = name;
+    if (kBigHatNames.contains(name)) hatBigName = name;
+    notifyListeners();
+    supabase.saveProfile({'hat_name': name});
+  }
+
+  void equipProp(String kind) {
+    propKind = kind;
+    notifyListeners();
+    supabase.saveProfile({'prop_kind': kind});
   }
 
   void setPreviewPaid(bool v) {
