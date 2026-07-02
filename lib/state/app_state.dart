@@ -9,7 +9,8 @@ class WorkLog {
   final String detail; // "07:00 – 18:30 · 한라양식"
   final String hours; // "저장됨" / "진행중"
   final String source; // GPS / DB / 로컬
-  WorkLog(this.date, this.detail, this.hours, this.source);
+  final double? hoursNum; // 실제 근무 시간(시) — clock_in/out에서 계산, 없으면 null
+  WorkLog(this.date, this.detail, this.hours, this.source, {this.hoursNum});
 }
 
 /// 앱 전역 상태. 사용자 데이터(프로필·근무기록)는 Supabase에서 로드한다.
@@ -176,8 +177,34 @@ class AppState extends ChangeNotifier {
     final cout = r['clock_out'] as String?;
     final date = (r['work_date'] ?? '') as String? ?? '';
     final detail = cout != null ? '$cin – $cout · $wp' : '$cin ~ 근무중 · $wp';
-    return WorkLog(date, detail, cout != null ? '저장됨' : '진행중', 'DB');
+    return WorkLog(date, detail, cout != null ? '저장됨' : '진행중', 'DB',
+        hoursNum: _calcHours(cin, cout));
   }
+
+  /// "HH:MM" 출퇴근으로 근무 시간(시)을 계산. 불완전하면 null.
+  static double? _calcHours(String? cin, String? cout) {
+    final a = _toMinutes(cin), b = _toMinutes(cout);
+    if (a == null || b == null) return null;
+    var diff = b - a;
+    if (diff < 0) diff += 24 * 60; // 자정 넘김
+    return diff / 60.0;
+  }
+
+  static int? _toMinutes(String? hhmm) {
+    if (hhmm == null) return null;
+    final p = hhmm.trim().split(':');
+    if (p.length < 2) return null;
+    final h = int.tryParse(p[0]), m = int.tryParse(p[1]);
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
+
+  // ----- 근무 요약 (DB 근무기록 기반) -----
+  /// 근무한 날 수(기록 건수).
+  int get workDays => logs.length;
+
+  /// 총 근무 시간(시). clock_in/out이 있는 기록만 합산.
+  double get totalHours => logs.fold(0.0, (sum, l) => sum + (l.hoursNum ?? 0));
 
   Future<void> checkAttend() async {
     if (attended) return;
@@ -191,6 +218,13 @@ class AppState extends ChangeNotifier {
       'attend_streak': attendStreak,
       'last_attend': today,
     });
+  }
+
+  /// 포인트 적립 (글 작성 등). 즉시 반영 + DB 저장.
+  Future<void> awardPoints(int n) async {
+    points += n;
+    notifyListeners();
+    await supabase.saveProfile({'points': points});
   }
 
   void setJobAd(String name) {

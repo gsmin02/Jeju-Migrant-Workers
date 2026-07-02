@@ -58,11 +58,11 @@ class _RecordTabState extends State<RecordTab> {
         ViewHeader(tr(app.lang, 'record_title'), tr(app.lang, 'record_sub')),
         // 주간 요약
         Row(children: [
-          _summary('5${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_week')),
+          _summary('${app.workDays}${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_week')),
           const SizedBox(width: 8),
-          _summary('47.2h', tr(app.lang, 'ws_hours')),
+          _summary('${app.totalHours.toStringAsFixed(1)}h', tr(app.lang, 'ws_hours')),
           const SizedBox(width: 8),
-          _summary('4${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_streak')),
+          _summary('${app.attendStreak}${tr(app.lang, 'unit_day')}', tr(app.lang, 'ws_streak')),
         ]),
         const SizedBox(height: 14),
         // GPS 카드

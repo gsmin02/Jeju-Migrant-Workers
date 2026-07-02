@@ -312,6 +312,7 @@ class _CommunityTabState extends State<CommunityTab> {
               if (err != null) {
                 toast(context, err);
               } else {
+                context.read<AppState>().awardPoints(5); // 글 작성 +5P
                 toast(context, tr(lang, 'write_done'));
                 _reload();
               }

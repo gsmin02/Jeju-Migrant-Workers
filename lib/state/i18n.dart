@@ -105,7 +105,7 @@ const Map<String, Map<String, String>> kI18n = {
     'tp_title_in': '🌅 출근 알림 시간', 'tp_title_out': '🌙 퇴근 알림 시간', 'tp_sub': '원하는 알림 시각을 골라주세요.',
     'tp_hour': '시', 'tp_min': '분', 'tp_set': '이 시간으로 설정', 'tp_set_toast': '알림 시간이 {t}(으)로 설정됐어요',
     // --- 커뮤니티 ---
-    'comm_ask': '궁금한 점을 물어보세요 · 글 작성 시 +50P',
+    'comm_ask': '궁금한 점을 물어보세요 · 글 작성 시 +5P',
     'comm_free_badge': '🎉 오픈 기간 — 글쓰기·읽기 모두 무료예요',
     'sort_hot': '🔥 인기순', 'sort_new': '🕐 최신순',
     'pin_label': '📌 오늘의 핫한 주제',
@@ -115,7 +115,7 @@ const Map<String, Map<String, String>> kI18n = {
     // 아바타 상점
     'shop_title': '제주 아이템 상점',
     'shop_sub': '글을 쓰거나 친구를 초대해 모은 포인트로 내 프로필을 꾸며요.',
-    'shop_how': '글 1개 = +50P · 친구 초대 = +200P',
+    'shop_how': '글 1개 = +5P · 친구 초대 = +200P',
     'shop_invite': '친구 초대하고 200P 받기',
     'shop_invite_toast': '초대 링크 복사됨 · 친구 가입 시 +200P (데모)',
     // 친구 초대 (실동작)
@@ -181,7 +181,7 @@ const Map<String, Map<String, String>> kI18n = {
     'cp_disc': '참고용 초안입니다. 제출 전 1350 또는 지원센터(064-712-1141)에서 확인하세요.',
     'cp_toast_sample': '📄 진정서 초안 (샘플)', 'cp_toast_done': '✅ 진정서 초안이 생성됐어요',
     'write_title': '✍️ 글 쓰기', 'write_title_ph': '제목을 입력하세요', 'write_body_ph': '내용을 자유롭게 적어주세요',
-    'write_submit': '올리기 (+50P)', 'write_need_title': '제목을 입력해 주세요', 'write_done': '글이 등록됐어요',
+    'write_submit': '올리기 (+5P)', 'write_need_title': '제목을 입력해 주세요', 'write_done': '글이 등록됐어요',
     'post_anon': '🧑 익명',
     'cmt_label': '댓글', 'cmt_loading': '불러오는 중…', 'cmt_empty': '아직 댓글이 없어요 · 첫 댓글을 남겨보세요',
     'cmt_ph': '따뜻한 댓글을 남겨주세요', 'cmt_send': '등록', 'cmt_err': '댓글 등록에 실패했어요', 'cmt_me': '나',
@@ -313,7 +313,7 @@ const Map<String, Map<String, String>> kI18n = {
     'noti_pv_body': "You haven't tapped clock-out today. Log now to keep accurate hours.",
     'tp_title_in': '🌅 Clock-in alert time', 'tp_title_out': '🌙 Clock-out alert time', 'tp_sub': 'Pick your preferred alert time.',
     'tp_hour': 'Hour', 'tp_min': 'Min', 'tp_set': 'Set this time', 'tp_set_toast': 'Alert time set to {t}',
-    'comm_ask': 'Ask a question · +50P when you post',
+    'comm_ask': 'Ask a question · +5P when you post',
     'comm_free_badge': '🎉 Open period — posting & reading are free',
     'sort_hot': '🔥 Popular', 'sort_new': '🕐 Newest',
     'pin_label': "📌 Today's hot topic",
@@ -323,7 +323,7 @@ const Map<String, Map<String, String>> kI18n = {
     // Avatar shop
     'shop_title': 'Jeju Item Shop',
     'shop_sub': 'Decorate your profile with points earned by posting or inviting friends.',
-    'shop_how': '1 post = +50P · Invite = +200P',
+    'shop_how': '1 post = +5P · Invite = +200P',
     'shop_invite': 'Invite a friend, get 200P',
     'shop_invite_toast': 'Invite link copied · +200P when they join (demo)',
     // Friend invite (real)
@@ -389,7 +389,7 @@ const Map<String, Map<String, String>> kI18n = {
     'cp_disc': 'This is a reference draft. Before submitting, check with 1350 or the support center (064-712-1141).',
     'cp_toast_sample': '📄 Draft complaint (sample)', 'cp_toast_done': '✅ Draft complaint created',
     'write_title': '✍️ Write a post', 'write_title_ph': 'Enter a title', 'write_body_ph': 'Write freely',
-    'write_submit': 'Post (+50P)', 'write_need_title': 'Please enter a title', 'write_done': 'Posted',
+    'write_submit': 'Post (+5P)', 'write_need_title': 'Please enter a title', 'write_done': 'Posted',
     'post_anon': '🧑 Anonymous',
     'cmt_label': 'Comments', 'cmt_loading': 'Loading…', 'cmt_empty': 'No comments yet · be the first',
     'cmt_ph': 'Leave a kind comment', 'cmt_send': 'Post', 'cmt_err': 'Failed to post comment', 'cmt_me': 'Me',
@@ -519,7 +519,7 @@ const Map<String, Map<String, String>> kI18n = {
     'noti_pv_body': 'Hôm nay bạn chưa nhấn tan ca. Ghi ngay để lưu chính xác giờ làm.',
     'tp_title_in': '🌅 Giờ nhắc vào ca', 'tp_title_out': '🌙 Giờ nhắc tan ca', 'tp_sub': 'Chọn giờ nhắc bạn muốn.',
     'tp_hour': 'Giờ', 'tp_min': 'Phút', 'tp_set': 'Đặt giờ này', 'tp_set_toast': 'Đã đặt giờ nhắc là {t}',
-    'comm_ask': 'Đặt câu hỏi · +50P khi đăng bài',
+    'comm_ask': 'Đặt câu hỏi · +5P khi đăng bài',
     'comm_free_badge': '🎉 Giai đoạn mở — đăng & đọc đều miễn phí',
     'sort_hot': '🔥 Phổ biến', 'sort_new': '🕐 Mới nhất',
     'pin_label': '📌 Chủ đề nóng hôm nay',
@@ -529,7 +529,7 @@ const Map<String, Map<String, String>> kI18n = {
     // Cửa hàng avatar
     'shop_title': 'Cửa hàng vật phẩm Jeju',
     'shop_sub': 'Trang trí hồ sơ bằng điểm kiếm được khi đăng bài hoặc mời bạn bè.',
-    'shop_how': '1 bài = +50P · Mời bạn = +200P',
+    'shop_how': '1 bài = +5P · Mời bạn = +200P',
     'shop_invite': 'Mời bạn, nhận 200P',
     'shop_invite_toast': 'Đã sao chép liên kết mời · +200P khi bạn tham gia (demo)',
     // Mời bạn (thật)
@@ -595,7 +595,7 @@ const Map<String, Map<String, String>> kI18n = {
     'cp_disc': 'Đây là bản nháp tham khảo. Trước khi nộp, hãy kiểm tra với 1350 hoặc trung tâm hỗ trợ (064-712-1141).',
     'cp_toast_sample': '📄 Bản nháp đơn (mẫu)', 'cp_toast_done': '✅ Đã tạo bản nháp đơn',
     'write_title': '✍️ Viết bài', 'write_title_ph': 'Nhập tiêu đề', 'write_body_ph': 'Viết tự do',
-    'write_submit': 'Đăng (+50P)', 'write_need_title': 'Vui lòng nhập tiêu đề', 'write_done': 'Đã đăng',
+    'write_submit': 'Đăng (+5P)', 'write_need_title': 'Vui lòng nhập tiêu đề', 'write_done': 'Đã đăng',
     'post_anon': '🧑 Ẩn danh',
     'cmt_label': 'Bình luận', 'cmt_loading': 'Đang tải…', 'cmt_empty': 'Chưa có bình luận · hãy là người đầu tiên',
     'cmt_ph': 'Để lại bình luận tử tế', 'cmt_send': 'Gửi', 'cmt_err': 'Đăng bình luận thất bại', 'cmt_me': 'Tôi',
@@ -725,7 +725,7 @@ const Map<String, Map<String, String>> kI18n = {
     'noti_pv_body': 'Anda belum menekan tombol pulang hari ini. Catat sekarang agar jam kerja akurat.',
     'tp_title_in': '🌅 Waktu pengingat masuk', 'tp_title_out': '🌙 Waktu pengingat pulang', 'tp_sub': 'Pilih waktu pengingat yang Anda mau.',
     'tp_hour': 'Jam', 'tp_min': 'Menit', 'tp_set': 'Setel waktu ini', 'tp_set_toast': 'Waktu pengingat disetel ke {t}',
-    'comm_ask': 'Ajukan pertanyaan · +50P saat posting',
+    'comm_ask': 'Ajukan pertanyaan · +5P saat posting',
     'comm_free_badge': '🎉 Periode buka — menulis & membaca gratis',
     'sort_hot': '🔥 Populer', 'sort_new': '🕐 Terbaru',
     'pin_label': '📌 Topik hangat hari ini',
@@ -735,7 +735,7 @@ const Map<String, Map<String, String>> kI18n = {
     // Toko avatar
     'shop_title': 'Toko Item Jeju',
     'shop_sub': 'Hias profilmu dengan poin dari menulis atau mengundang teman.',
-    'shop_how': '1 pos = +50P · Undang = +200P',
+    'shop_how': '1 pos = +5P · Undang = +200P',
     'shop_invite': 'Undang teman, dapat 200P',
     'shop_invite_toast': 'Tautan undangan disalin · +200P saat mereka bergabung (demo)',
     // Undang teman (nyata)
@@ -801,7 +801,7 @@ const Map<String, Map<String, String>> kI18n = {
     'cp_disc': 'Ini draf referensi. Sebelum mengajukan, periksa dengan 1350 atau pusat bantuan (064-712-1141).',
     'cp_toast_sample': '📄 Draf pengaduan (contoh)', 'cp_toast_done': '✅ Draf pengaduan dibuat',
     'write_title': '✍️ Tulis postingan', 'write_title_ph': 'Masukkan judul', 'write_body_ph': 'Tulis dengan bebas',
-    'write_submit': 'Kirim (+50P)', 'write_need_title': 'Silakan masukkan judul', 'write_done': 'Terkirim',
+    'write_submit': 'Kirim (+5P)', 'write_need_title': 'Silakan masukkan judul', 'write_done': 'Terkirim',
     'post_anon': '🧑 Anonim',
     'cmt_label': 'Komentar', 'cmt_loading': 'Memuat…', 'cmt_empty': 'Belum ada komentar · jadilah yang pertama',
     'cmt_ph': 'Tinggalkan komentar yang baik', 'cmt_send': 'Kirim', 'cmt_err': 'Gagal mengirim komentar', 'cmt_me': 'Saya',
