@@ -6,6 +6,7 @@ import '../state/app_state.dart';
 import '../state/i18n.dart';
 import '../data/avatar_svgs.dart';
 import 'common.dart';
+import 'invite_sheet.dart';
 
 /// 아바타 아이템 상점. 피부색·옷·모자·소품을 골라 프로필 캐릭터를 꾸민다.
 /// 장착 상태는 AppState → Supabase profiles에 저장된다.
@@ -169,10 +170,8 @@ class _ShopSheetState extends State<_ShopSheet> {
             const SizedBox(height: 14),
             _buildGrid(context, app),
             const SizedBox(height: 16),
-            BigButton('🎁 ${tr(lang, 'shop_invite')}', () {
-              Navigator.pop(context);
-              toast(context, tr(lang, 'shop_invite_toast'));
-            }, color: AppColors.limeDeep),
+            BigButton('🎁 ${tr(lang, 'shop_invite')}', () => showInviteSheet(context),
+                color: AppColors.limeDeep),
           ],
         ),
       ),

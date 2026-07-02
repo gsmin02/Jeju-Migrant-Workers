@@ -126,6 +126,19 @@ class SupabaseService {
     } catch (_) {}
   }
 
+  /// 초대 코드 사용. redeem_invite RPC 호출 → {ok, reason?, bonus?}.
+  /// 실패 시 {ok:false, reason:'err'} 반환(테이블/함수 없음 등).
+  Future<Map<String, dynamic>> redeemInvite(String code) async {
+    if (!isLoggedIn) return {'ok': false, 'reason': 'auth'};
+    try {
+      final res = await _c.rpc('redeem_invite', params: {'code': code});
+      if (res is Map) return Map<String, dynamic>.from(res);
+      return {'ok': false, 'reason': 'err'};
+    } catch (_) {
+      return {'ok': false, 'reason': 'err'};
+    }
+  }
+
   // ---------------- 사업장 ----------------
   Future<List<Workplace>> fetchWorkplaces() async {
     try {

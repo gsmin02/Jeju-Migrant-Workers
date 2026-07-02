@@ -34,6 +34,7 @@ class AppState extends ChangeNotifier {
   String? name;
   String? nationality;
   String? workplace; // 내 사업장 이름 (없으면 null)
+  String? inviteCode; // 내 초대 코드 (profiles.invite_code)
   int points = 0;
   int attendStreak = 0;
   bool attended = false;
@@ -82,6 +83,7 @@ class AppState extends ChangeNotifier {
       name = p['name'] as String?;
       nationality = p['nationality'] as String?;
       workplace = p['workplace'] as String?;
+      inviteCode = p['invite_code'] as String?;
       points = (p['points'] ?? 0) as int;
       attendStreak = (p['attend_streak'] ?? 0) as int;
       final last = p['last_attend'] as String?;
@@ -135,6 +137,18 @@ class AppState extends ChangeNotifier {
   void setJobAd(String name) {
     jobAd = name;
     notifyListeners();
+  }
+
+  /// 초대 코드 사용. 성공 시 내 포인트 +bonus.
+  /// 반환: 'ok' / 'already' / 'notfound' / 'self' / 'auth' / 'err'
+  Future<String> redeemInvite(String code) async {
+    final res = await supabase.redeemInvite(code.trim());
+    if (res['ok'] == true) {
+      points += (res['bonus'] ?? 100) as int;
+      notifyListeners();
+      return 'ok';
+    }
+    return (res['reason'] ?? 'err') as String;
   }
 
   // ----- 아바타 장착 (변경 즉시 DB profiles에 저장) -----

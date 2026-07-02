@@ -20,6 +20,8 @@ create table if not exists public.profiles (
   cloth_kind    text not null default 'farm',
   hat_name      text not null default '귤모자',
   prop_kind     text not null default 'none',
+  invite_code   text,
+  invited_by    uuid references auth.users(id),
   created_at    timestamptz not null default now()
 );
 -- 아바타 컬럼 (기존 DB 대상 멱등 마이그레이션)
@@ -27,6 +29,12 @@ alter table public.profiles add column if not exists skin_color text not null de
 alter table public.profiles add column if not exists cloth_kind text not null default 'farm';
 alter table public.profiles add column if not exists hat_name   text not null default '귤모자';
 alter table public.profiles add column if not exists prop_kind  text not null default 'none';
+-- 친구초대 컬럼
+alter table public.profiles add column if not exists invite_code text;
+alter table public.profiles add column if not exists invited_by  uuid references auth.users(id);
+-- 기존 프로필에 초대 코드 backfill (id 기반 6자리, 결정적)
+update public.profiles set invite_code = upper(substr(md5(id::text), 1, 6)) where invite_code is null;
+create unique index if not exists profiles_invite_code_key on public.profiles(invite_code);
 alter table public.profiles enable row level security;
 drop policy if exists "profiles self select" on public.profiles;
 drop policy if exists "profiles self insert" on public.profiles;
@@ -35,18 +43,40 @@ create policy "profiles self select" on public.profiles for select to authentica
 create policy "profiles self insert" on public.profiles for insert to authenticated with check (auth.uid() = id);
 create policy "profiles self update" on public.profiles for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
 
--- 가입 시 프로필 자동 생성 (name/nationality 는 signUp 메타데이터에서)
+-- 가입 시 프로필 자동 생성 (name/nationality 는 signUp 메타데이터에서, invite_code 자동 발급)
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, name, nationality)
-  values (new.id, new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'nationality')
+  insert into public.profiles (id, name, nationality, invite_code)
+  values (new.id, new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'nationality',
+          upper(substr(md5(new.id::text), 1, 6)))
   on conflict (id) do nothing;
   return new;
 end; $$;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users for each row execute function public.handle_new_user();
+
+-- 친구초대 코드 사용(redeem): 초대자 +200P, 나 +100P. RLS 우회 위해 security definer.
+-- 반환 jsonb: {ok, reason?, bonus?}
+create or replace function public.redeem_invite(code text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  me uuid := auth.uid();
+  inviter uuid;
+begin
+  if me is null then return jsonb_build_object('ok', false, 'reason', 'auth'); end if;
+  if exists (select 1 from public.profiles where id = me and invited_by is not null) then
+    return jsonb_build_object('ok', false, 'reason', 'already');
+  end if;
+  select id into inviter from public.profiles where invite_code = upper(trim(code)) limit 1;
+  if inviter is null then return jsonb_build_object('ok', false, 'reason', 'notfound'); end if;
+  if inviter = me then return jsonb_build_object('ok', false, 'reason', 'self'); end if;
+  update public.profiles set points = points + 200 where id = inviter;
+  update public.profiles set points = points + 100, invited_by = inviter where id = me;
+  return jsonb_build_object('ok', true, 'bonus', 100);
+end; $$;
+grant execute on function public.redeem_invite(text) to authenticated;
 
 -- ---------- 2. workplaces (공개 참조 데이터) ----------
 create table if not exists public.workplaces (
