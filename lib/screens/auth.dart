@@ -20,14 +20,19 @@ class _AuthScreenState extends State<AuthScreen> {
   final _email = TextEditingController();
   final _pw = TextEditingController();
   final _name = TextEditingController();
-  final _nat = TextEditingController();
+  String? _nationality; // 고정 목록에서 선택
+
+  // 제주 이주노동자 주요 국적 (스크롤 선택 목록)
+  static const _nationalities = [
+    '네팔', '베트남', '인도네시아', '캄보디아', '스리랑카', '태국',
+    '미얀마', '필리핀', '방글라데시', '몽골', '우즈베키스탄', '중국', '기타',
+  ];
 
   @override
   void dispose() {
     _email.dispose();
     _pw.dispose();
     _name.dispose();
-    _nat.dispose();
     super.dispose();
   }
 
@@ -49,7 +54,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
     final err = signupMode
         ? await supabase.signUp(email, pw,
-            name: _name.text.trim(), nationality: _nat.text.trim())
+            name: _name.text.trim(), nationality: _nationality)
         : await supabase.signIn(email, pw);
     if (!mounted) return;
     setState(() => loading = false);
@@ -105,7 +110,7 @@ class _AuthScreenState extends State<AuthScreen> {
               _field('비밀번호', _pw, hint: '6자 이상', obscure: true),
               if (signupMode) ...[
                 _field('이름 (닉네임도 괜찮아요)', _name, hint: '예: Bibek / 비벡'),
-                _field('국적 (선택)', _nat, hint: '예: 네팔'),
+                _natField(),
               ],
               if (error != null) ...[
                 const SizedBox(height: 12),
@@ -152,6 +157,43 @@ class _AuthScreenState extends State<AuthScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
         child: Text(text, style: TextStyle(fontSize: 12, color: fg, height: 1.4, fontWeight: FontWeight.w600)),
+      );
+
+  // 국적: 자유입력 대신 고정 목록에서 선택 (목록이 길면 스크롤).
+  Widget _natField() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 12, bottom: 4),
+            child: Text('국적 (선택)',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: _nationality,
+            isExpanded: true,
+            menuMaxHeight: 320,
+            icon: const Icon(Icons.expand_more, color: AppColors.inkSoft),
+            hint: const Text('국적을 선택하세요',
+                style: TextStyle(color: Color(0xFFB0A98F), fontSize: 14)),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              filled: true,
+              fillColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.line, width: 1.5)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.sea, width: 1.5)),
+            ),
+            items: [
+              for (final n in _nationalities)
+                DropdownMenuItem(value: n, child: Text(n, style: const TextStyle(fontSize: 14))),
+            ],
+            onChanged: (v) => setState(() => _nationality = v),
+          ),
+        ],
       );
 
   Widget _field(String label, TextEditingController c,
