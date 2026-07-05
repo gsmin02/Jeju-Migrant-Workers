@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme.dart';
 import 'state/app_state.dart';
+import 'state/i18n.dart';
 import 'services/supabase_service.dart';
 import 'screens/auth.dart';
 import 'screens/tutorial.dart';
@@ -20,8 +21,10 @@ class JejuPayApp extends StatelessWidget {
   const JejuPayApp({super.key});
   @override
   Widget build(BuildContext context) {
+    // 언어 변경 시 브라우저 탭 제목(document.title)도 함께 갱신
+    final lang = context.select<AppState, String>((s) => s.lang);
     return MaterialApp(
-      title: 'Jeju Migrant Workers',
+      title: tr(lang, 'app_title'),
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
       home: const AuthGate(),
