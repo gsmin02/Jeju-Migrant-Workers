@@ -1,0 +1,67 @@
+<svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 -->
+  <rect x="0" y="0" width="1024" height="1024" fill="#ffffff"/>
+
+  <!-- 소문자 'j' 몸통 (제주 현무암) -->
+  <g id="j-body">
+    <path
+      d="M 545 330 C 545 305, 585 300, 630 300 C 700 300, 770 305, 770 335 C 772 430, 768 560, 762 690 C 756 810, 700 918, 545 940 C 400 960, 235 940, 150 855 C 95 800, 110 700, 155 645 C 195 598, 265 585, 300 610 C 330 632, 322 690, 322 730 C 322 772, 355 800, 405 800 C 470 800, 512 762, 522 700 C 535 560, 540 440, 545 330 Z"
+      fill="#4d4d4d" stroke="#333333" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+
+  <!-- 현무암 기공 반점 -->
+  <g id="j-speckles" fill="#a8a8a8">
+    <ellipse cx="585" cy="360" rx="9" ry="13" transform="rotate(-18 585 360)"/>
+    <ellipse cx="620" cy="398" rx="6" ry="9" transform="rotate(10 620 398)"/>
+    <ellipse cx="600" cy="430" rx="5" ry="7" transform="rotate(0 600 430)"/>
+    <ellipse cx="640" cy="375" rx="4" ry="6" transform="rotate(20 640 375)"/>
+    <ellipse cx="575" cy="408" rx="4" ry="5" transform="rotate(0 575 408)"/>
+    <ellipse cx="630" cy="440" rx="5" ry="8" transform="rotate(-12 630 440)"/>
+    <ellipse cx="240" cy="645" rx="10" ry="14" transform="rotate(-22 240 645)"/>
+    <ellipse cx="275" cy="665" rx="6" ry="9" transform="rotate(8 275 665)"/>
+    <ellipse cx="248" cy="695" rx="6" ry="8" transform="rotate(0 248 695)"/>
+    <ellipse cx="288" cy="660" rx="5" ry="7" transform="rotate(15 288 660)"/>
+    <ellipse cx="228" cy="675" rx="4" ry="6" transform="rotate(-10 228 675)"/>
+    <ellipse cx="262" cy="705" rx="5" ry="7" transform="rotate(0 262 705)"/>
+    <ellipse cx="246" cy="725" rx="4" ry="5" transform="rotate(12 246 725)"/>
+    <ellipse cx="292" cy="690" rx="4" ry="6" transform="rotate(-8 292 690)"/>
+    <ellipse cx="226" cy="655" rx="4" ry="5" transform="rotate(0 226 655)"/>
+    <ellipse cx="700" cy="700" rx="10" ry="15" transform="rotate(-20 700 700)"/>
+    <ellipse cx="720" cy="745" rx="12" ry="16" transform="rotate(10 720 745)"/>
+    <ellipse cx="680" cy="760" rx="8" ry="11" transform="rotate(0 680 760)"/>
+    <ellipse cx="705" cy="790" rx="13" ry="17" transform="rotate(-14 705 790)"/>
+    <ellipse cx="665" cy="800" rx="7" ry="10" transform="rotate(8 665 800)"/>
+    <ellipse cx="640" cy="830" rx="11" ry="14" transform="rotate(0 640 830)"/>
+    <ellipse cx="685" cy="835" rx="9" ry="12" transform="rotate(18 685 835)"/>
+    <ellipse cx="600" cy="855" rx="8" ry="11" transform="rotate(-10 600 855)"/>
+    <ellipse cx="555" cy="870" rx="10" ry="13" transform="rotate(6 555 870)"/>
+    <ellipse cx="640" cy="875" rx="7" ry="9" transform="rotate(0 640 875)"/>
+    <ellipse cx="505" cy="880" rx="8" ry="11" transform="rotate(-16 505 880)"/>
+    <ellipse cx="560" cy="900" rx="9" ry="12" transform="rotate(10 560 900)"/>
+    <ellipse cx="460" cy="890" rx="6" ry="8" transform="rotate(0 460 890)"/>
+    <ellipse cx="610" cy="895" rx="6" ry="8" transform="rotate(14 610 895)"/>
+    <ellipse cx="500" cy="915" rx="5" ry="7" transform="rotate(0 500 915)"/>
+  </g>
+
+  <!-- 감귤 -->
+  <g id="mandarin" transform="translate(0 -55)">
+    <g transform="rotate(-3 650 190)">
+      <path
+        d="M 500 195 C 500 130, 570 95, 655 95 C 745 95, 805 135, 802 195 C 800 258, 740 300, 650 302 C 560 304, 500 260, 500 195 Z"
+        fill="#F5A623" stroke="#CE7A0E" stroke-width="13" stroke-linejoin="round"/>
+      <g fill="#CE7A0E">
+        <circle cx="765" cy="222" r="5.5"/>
+        <circle cx="728" cy="238" r="6"/>
+        <circle cx="748" cy="242" r="5.5"/>
+        <circle cx="710" cy="258" r="5"/>
+        <circle cx="728" cy="264" r="5.5"/>
+        <circle cx="710" cy="240" r="5"/>
+        <circle cx="714" cy="276" r="5"/>
+        <circle cx="688" cy="272" r="4.5"/>
+      </g>
+    </g>
+    <path
+      d="M 566 104 L 588 70 L 612 92 L 632 64 L 656 88 L 682 70 L 700 96 L 690 118 L 656 126 L 620 122 L 588 126 Z"
+      fill="#1b7a3e" stroke="#0f5132" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>
