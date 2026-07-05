@@ -1,6 +1,7 @@
 /// 다국어 문자열 (목업 I18N 이식). 키 없으면 ko로 폴백.
 const Map<String, Map<String, String>> kI18n = {
   'ko': {
+    'app_title': '제이',
     'bar_home': '제이', 'bar_record': '근무 기록', 'bar_work': '사업장',
     'bar_comm': '커뮤니티', 'bar_sos': '긴급 도움',
     'tab_home': '홈', 'tab_record': '기록', 'tab_work': '사업장',
@@ -213,7 +214,8 @@ const Map<String, Map<String, String>> kI18n = {
     'sos_disc': '표시된 제도·연락처는 이해를 돕기 위한 예시이며, 실제 신청 전 고용노동부·제주 지원센터에서 최신 내용을 확인하세요. 이 앱은 법률 자문을 제공하지 않습니다.',
   },
   'en': {
-    'bar_home': 'Jeju Migrant Workers', 'bar_record': 'Work Log', 'bar_work': 'Workplaces',
+    'app_title': 'J',
+    'bar_home': 'J', 'bar_record': 'Work Log', 'bar_work': 'Workplaces',
     'bar_comm': 'Community', 'bar_sos': 'Emergency Help',
     'tab_home': 'Home', 'tab_record': 'Log', 'tab_work': 'Places',
     'tab_comm': 'Community', 'tab_sos': 'SOS',
@@ -420,7 +422,8 @@ const Map<String, Map<String, String>> kI18n = {
     'sos_disc': 'Programs/contacts shown are examples for understanding. Check the latest with the Ministry of Labor / Jeju Support Center before applying. This app does not provide legal advice.',
   },
   'vi': {
-    'bar_home': 'Jeju Migrant Workers', 'bar_record': 'Nhật ký', 'bar_work': 'Nơi làm việc',
+    'app_title': 'J',
+    'bar_home': 'J', 'bar_record': 'Nhật ký', 'bar_work': 'Nơi làm việc',
     'bar_comm': 'Cộng đồng', 'bar_sos': 'Trợ giúp khẩn cấp',
     'tab_home': 'Trang chủ', 'tab_record': 'Nhật ký', 'tab_work': 'Nơi làm',
     'tab_comm': 'Cộng đồng', 'tab_sos': 'SOS',
@@ -627,7 +630,8 @@ const Map<String, Map<String, String>> kI18n = {
     'sos_disc': 'Chương trình/liên hệ chỉ là ví dụ để hiểu. Hãy kiểm tra thông tin mới nhất với Bộ Lao động / trung tâm Jeju trước khi nộp. App không cung cấp tư vấn pháp lý.',
   },
   'id': {
-    'bar_home': 'Jeju Migrant Workers', 'bar_record': 'Catatan', 'bar_work': 'Tempat Kerja',
+    'app_title': 'J',
+    'bar_home': 'J', 'bar_record': 'Catatan', 'bar_work': 'Tempat Kerja',
     'bar_comm': 'Komunitas', 'bar_sos': 'Bantuan Darurat',
     'tab_home': 'Beranda', 'tab_record': 'Catatan', 'tab_work': 'Tempat',
     'tab_comm': 'Komunitas', 'tab_sos': 'SOS',
