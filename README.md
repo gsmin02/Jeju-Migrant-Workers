@@ -2,7 +2,9 @@
 
 제주 이주노동자가 평소 동료들과 근무를 기록해 근거를 모으고, 임금체불이 발생하면 그 기록으로 **진정서를 자동 생성**해 떼인 임금을 되찾도록 돕는 앱.
 
-- 이름: **제이** = **제**주 **이**주민 · 영문 **Jeju Migrant Workers**
+**🌐 웹 데모: <https://jeju-j.vercel.app>** — 설치 없이 브라우저에서 바로 체험할 수 있습니다. (진정서 AI 생성은 서버가 필요해 웹 데모에서는 샘플로 동작)
+
+- 이름: **제이** = **제**주 **이**주민 · 영문 이니셜 **J**
 - 프레임워크: Flutter (iOS·Android)
 - 서버: [Jeju-Migrant-Workers-SERVER](https://github.com/gsmin02/Jeju-Migrant-Workers-SERVER) (NestJS)
 
